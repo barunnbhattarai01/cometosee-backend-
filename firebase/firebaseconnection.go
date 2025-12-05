@@ -20,7 +20,7 @@ func Initailize() *firebase.App {
 
 	opt := option.WithCredentialsFile("firebase/serviceAccountkey.json")
 	var err error
-	app, err := firebase.NewApp(ctx, nil, opt)
+	app, err = firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		log.Fatalf("failed to intailize firebase %v", err)
 	} else {
@@ -31,6 +31,10 @@ func Initailize() *firebase.App {
 
 // firestore
 func Firestore() *firestore.Client {
+	if app == nil {
+		Initailize()
+	}
+
 	client, err := app.Firestore(ctx)
 
 	if err != nil {

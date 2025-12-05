@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cometosee/controller"
 	"cometosee/firebase"
 	"cometosee/intailizer"
 	"cometosee/middleware"
@@ -50,6 +51,9 @@ func main() {
 	}
 
 	//routing
+	gor.HandleFunc("/signup", controller.Signup).Methods("POST")
+	gor.HandleFunc("/login", controller.Login).Methods("POST")
+	gor.HandleFunc("/post", controller.UploadPost).Methods("POST")
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal("error in server")
