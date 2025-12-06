@@ -14,8 +14,9 @@ var ctx = context.Background()
 
 func UploadPost(w http.ResponseWriter, r *http.Request) {
 	type ReqBody struct {
-		Caption  string `json:"caption"`
-		ImageURL string `json:"image_url"`
+		Caption   string `json:"caption"`
+		ImageURL  string `json:"image_url"`
+		Community string `json:"community"`
 	}
 
 	var body ReqBody
@@ -25,8 +26,8 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if body.Caption == "" || body.ImageURL == "" {
-		common.WriteJSONError(w, "caption and image_url are required", http.StatusBadRequest)
+	if body.Caption == "" || body.ImageURL == "" || body.Community == "" {
+		common.WriteJSONError(w, "caption and image_url and community are required", http.StatusBadRequest)
 		return
 	}
 
@@ -35,9 +36,10 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 	defer client.Close()
 
 	_, _, err = client.Collection("posts").Add(ctx, model.POSTDATA{
-		ImageUrl: body.ImageURL,
-		Caption:  body.Caption,
-		Created:  time.Now(),
+		ImageUrl:  body.ImageURL,
+		Caption:   body.Caption,
+		Community: body.Community,
+		Created:   time.Now(),
 	})
 
 	if err != nil {

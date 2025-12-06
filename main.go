@@ -54,6 +54,8 @@ func main() {
 	gor.HandleFunc("/signup", controller.Signup).Methods("POST")
 	gor.HandleFunc("/login", controller.Login).Methods("POST")
 	gor.HandleFunc("/post", controller.UploadPost).Methods("POST")
+	gor.HandleFunc("/post/like", controller.LikePost).Methods("POST")
+	gor.HandleFunc("/post/comment", controller.CommentPost).Methods("POST")
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal("error in server")
