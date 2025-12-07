@@ -80,3 +80,40 @@ func CommentPost(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "comment added")
 }
+
+func SharePost(w http.ResponseWriter, r *http.Request) {
+	type Reqbody struct {
+		PostId string `json:"post_id"`
+		UserId string `json:"user_id"`
+	}
+
+	var body Reqbody
+
+	err := common.ParseJSONBody(r, &body)
+	if err != nil {
+		common.WriteJSONError(w, "invalid requestt", http.StatusBadRequest)
+		return
+	}
+
+	if body.PostId == "" || body.UserId == "" {
+		common.WriteJSONError(w, "post_id and user_id and comment is required", http.StatusBadRequest)
+		return
+	}
+
+	clients := firebase.Firestore()
+	defer clients.Close()
+
+	_, _, err = clients.Collection("posts").Doc(body.PostId).Collection("user").Add(ctx, map[string]interface{}{
+		"user_id": body.UserId,
+		"post_id": body.PostId,
+		"created": time.Now(),
+	})
+
+	if err != nil {
+		common.WriteJSONError(w, "failed to save comment", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "comment added")
+
+}
