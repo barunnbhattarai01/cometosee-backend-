@@ -5,6 +5,7 @@ import (
 	"cometosee/firebase"
 	"cometosee/intailizer"
 	"cometosee/middleware"
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -49,13 +50,14 @@ func main() {
 		Addr:    handler.Addr,
 		Handler: corshandler,
 	}
-
+	manager := controller.NewManger(context.Background())
 	//routing
 	gor.HandleFunc("/signup", controller.Signup).Methods("POST")
 	gor.HandleFunc("/login", controller.Login).Methods("POST")
 	gor.HandleFunc("/post", controller.UploadPost).Methods("POST")
 	gor.HandleFunc("/post/like", controller.LikePost).Methods("POST")
 	gor.HandleFunc("/post/comment", controller.CommentPost).Methods("POST")
+	gor.HandleFunc("/ws/manager", manager.ServeWS).Methods("GET")
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal("error in server")
