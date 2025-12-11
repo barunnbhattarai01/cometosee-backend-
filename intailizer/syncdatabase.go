@@ -19,5 +19,20 @@ func Syncdatabase() {
 		log.Fatalf("errror in creating auth table %v", err)
 	}
 
+	messgingtable := `
+	create table if not exists messagetable(
+	id serial primary key,
+	sender text not null,
+	room text not null,
+	message text not null,
+	sent_at timestamp not null default now()
+	)
+	`
+	_, err = DB.Exec(messgingtable)
+
+	if err != nil {
+		log.Fatalf("error in creting messaging table :%v", err)
+	}
+
 	fmt.Print("table ready")
 }

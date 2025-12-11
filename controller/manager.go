@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"cometosee/intailizer"
 	"context"
 	"encoding/json"
 	"errors"
@@ -193,6 +194,13 @@ func (m *Manager) SendMessage(event Event, c *Client) error {
 	data, err := json.Marshal(broadMessage)
 	if err != nil {
 		return fmt.Errorf("failed to marshal outgoing message: %v", err)
+	}
+
+	query := `insert into messagetable (sender,room,message,sent_at) values($1,$2,$3,$3)`
+	_, err = intailizer.DB.Exec(query, chatevent.From, c.chatroom, chatevent.Message, broadMessage.Sent)
+
+	if err != nil {
+		log.Printf("failed to stored msg in database :%v", err)
 	}
 
 	outgoingEvent := Event{
