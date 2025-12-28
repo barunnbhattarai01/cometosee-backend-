@@ -57,6 +57,7 @@ func main() {
 	gor.HandleFunc("/post", controller.UploadPost).Methods("POST")
 	gor.HandleFunc("/post/like", controller.LikePost).Methods("POST")
 	gor.HandleFunc("/post/comment", controller.CommentPost).Methods("POST")
+	gor.HandleFunc("/getpost", controller.Fecthpost).Methods("GET")
 	gor.HandleFunc("/ws/manager", manager.ServeWS).Methods("GET")
 
 	if err := srv.ListenAndServe(); err != nil {

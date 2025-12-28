@@ -17,6 +17,7 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 		Caption   string `json:"caption"`
 		ImageURL  string `json:"image_url"`
 		Community string `json:"community"`
+		Username  string `json:"username"`
 	}
 
 	var body ReqBody
@@ -26,7 +27,7 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if body.Caption == "" || body.ImageURL == "" || body.Community == "" {
+	if body.Caption == "" || body.ImageURL == "" || body.Community == "" || body.Username == "" {
 		common.WriteJSONError(w, "caption and image_url and community are required", http.StatusBadRequest)
 		return
 	}
@@ -39,6 +40,7 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 		ImageUrl:  body.ImageURL,
 		Caption:   body.Caption,
 		Community: body.Community,
+		Username:  body.Username,
 		Created:   time.Now(),
 	})
 
