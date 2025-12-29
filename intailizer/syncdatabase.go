@@ -19,6 +19,16 @@ func Syncdatabase() {
 		log.Fatalf("errror in creating auth table %v", err)
 	}
 
+	//alter the username
+	// alter := `alter table cometoseeauth
+	// add column username text not null`
+
+	// _, err = DB.Exec(alter)
+
+	// if err != nil {
+	// 	log.Printf("errror altering table")
+	// }
+
 	messgingtable := `
 	create table if not exists messagetable(
 	id serial primary key,

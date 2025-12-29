@@ -196,7 +196,7 @@ func (m *Manager) SendMessage(event Event, c *Client) error {
 		return fmt.Errorf("failed to marshal outgoing message: %v", err)
 	}
 
-	query := `insert into messagetable (sender,room,message,sent_at) values($1,$2,$3,$3)`
+	query := `insert into messagetable (sender,room,message,sent_at) values($1,$2,$3,$4)`
 	_, err = intailizer.DB.Exec(query, chatevent.From, c.chatroom, chatevent.Message, broadMessage.Sent)
 
 	if err != nil {

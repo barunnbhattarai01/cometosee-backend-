@@ -37,9 +37,9 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `insert into cometoseeauth (email,password) values ($1,$2)`
+	query := `insert into cometoseeauth (username,email,password) values ($1,$2,$3)`
 
-	_, err = intailizer.DB.Exec(query, strings.ToLower(body.Email), string(hash))
+	_, err = intailizer.DB.Exec(query, body.Username, strings.ToLower(body.Email), string(hash))
 
 	if err != nil {
 		common.WriteJSONError(w, "error in inserting value in database", http.StatusInternalServerError)
@@ -62,9 +62,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	email := strings.ToLower(body.Email)
 
-	var hashpassword string
+	var hashpassword, username string
 
-	err := intailizer.DB.QueryRow(`select password from cometoseeauth where email=$1`, email).Scan(&hashpassword)
+	err := intailizer.DB.QueryRow(`select username, password from cometoseeauth where email=$1`, email).Scan(&username, &hashpassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			common.WriteJSONError(w, "Email not found", http.StatusBadRequest)
@@ -79,23 +79,25 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := geneareJwt(email)
+	token, err := geneareJwt(email, username)
 	if err != nil {
 		common.WriteJSONError(w, "error in generating jwt token", http.StatusInternalServerError)
 		return
 	}
 
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "login sucessfully",
-		"token":   token,
+		"message":  "login sucessfully",
+		"token":    token,
+		"username": username,
 	})
 
 }
 
-func geneareJwt(email string) (string, error) {
+func geneareJwt(email string, username string) (string, error) {
 	claims := jwt.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+		"email":    email,
+		"username": username,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
 	}
 	secret := os.Getenv("SECRET")
 
