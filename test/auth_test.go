@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func TestSignup(t *testing.T) {
+func TestSignup_TestLogin(t *testing.T) {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		t.Fatalf("Error loading env file: %v", err)
@@ -49,4 +49,22 @@ func TestSignup(t *testing.T) {
 	}
 
 	defer intailizer.DB.Exec(`DELETE FROM cometoseeauth WHERE email=$1`, email)
+
+	//login__test
+	loginreq := httptest.NewRequest("POST", "/login", strings.NewReader(body))
+	loginreq.Header.Set("Content-Type", "application/json")
+
+	loginrec := httptest.NewRecorder()
+	controller.Login(loginrec, loginreq)
+
+	//check http status
+	if loginrec.Code != http.StatusOK {
+		t.Fatalf("Expected 200,got %d", loginrec.Code)
+	}
+
+	//check if jwt  is returenrd or not
+	responsestr := loginrec.Body.String()
+	if !strings.Contains(responsestr, "token") {
+		t.Fatalf("Jwt token not found in response :%s", responsestr)
+	}
 }

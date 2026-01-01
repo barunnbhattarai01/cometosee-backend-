@@ -42,7 +42,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	_, err = intailizer.DB.Exec(query, body.Username, strings.ToLower(body.Email), string(hash))
 
 	if err != nil {
-		common.WriteJSONError(w, "error in inserting value in database", http.StatusInternalServerError)
+		common.WriteJSONError(w, "error in inserting value in database or email already exists", http.StatusInternalServerError)
 		return
 	}
 
