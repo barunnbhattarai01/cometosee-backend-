@@ -36,7 +36,7 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 	client := firebase.Firestore()
 	defer client.Close()
 
-	_, _, err = client.Collection("posts").Add(ctx, model.POSTDATA{
+	docRef, _, err := client.Collection("posts").Add(ctx, model.POSTDATA{
 		ImageUrl:  body.ImageURL,
 		Caption:   body.Caption,
 		Community: body.Community,
@@ -49,5 +49,5 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "upload successfully :%s", body.ImageURL)
+	fmt.Fprintf(w, "upload successfully :%s,docId: %s", body.ImageURL, docRef.ID)
 }

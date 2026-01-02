@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
@@ -18,9 +19,9 @@ func Initailize() *firebase.App {
 		return app
 	}
 
-	opt := option.WithCredentialsFile("firebase/serviceAccountkey.json")
+	opt := option.WithCredentialsFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	var err error
-	app, err = firebase.NewApp(ctx, nil, opt)
+	app, err = firebase.NewApp(ctx, &firebase.Config{ProjectID: os.Getenv("FIREBASE_PROJECT_ID")}, opt)
 	if err != nil {
 		log.Fatalf("failed to intailize firebase %v", err)
 	} else {

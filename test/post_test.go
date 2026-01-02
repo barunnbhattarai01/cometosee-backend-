@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -23,9 +24,9 @@ func Test_POST(t *testing.T) {
 	//intailize fireabase app
 	ctx := context.Background()
 
-	sa := option.WithCredentialsFile("../firebase/serviceAccountkey.json")
+	sa := option.WithCredentialsFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 
-	app, err := firebase.NewApp(ctx, nil, sa)
+	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: os.Getenv("FIREBASE_PROJECT_ID")}, sa)
 
 	if err != nil {
 		t.Fatalf("error in intailizing firebase app :%v", err)
@@ -57,15 +58,18 @@ func Test_POST(t *testing.T) {
 		t.Fatalf("Excepted status 200, got %d", rec.Code)
 	}
 
+	//taking doc id from response
+	resp := rec.Body.String()
+	parts := strings.Split(resp, "docId: ")
+
+	docsid := strings.TrimSpace(parts[1])
+
 	//check if the post is uploaded infirebase or not
-	check := client.Collection("posts").Where("ImageUrl", "==", body["image_url"]).Where("Username", "==", body["username"]).Documents(ctx)
-	docs, err := check.GetAll()
-	if err != nil || len(docs) == 0 {
+	docs, err := client.Collection("posts").Doc(docsid).Get(ctx)
+	if err != nil || !docs.Exists() {
 		t.Fatalf("Post not found firestore")
 	}
 
-	//clear test data
-	for _, doc := range docs {
-		_, _ = client.Collection("posts").Doc(doc.Ref.ID).Delete(ctx)
-	}
+	//clear after test
+	_, _ = client.Collection("posts").Doc(docsid).Delete(ctx)
 }
