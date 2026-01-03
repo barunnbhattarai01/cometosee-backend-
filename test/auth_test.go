@@ -31,7 +31,7 @@ func TestSignup_TestLogin(t *testing.T) {
 
 	req := httptest.NewRequest("POST", "/signup", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
-
+	t.Log("Signupinggg")
 	rec := httptest.NewRecorder()
 	controller.Signup(rec, req)
 
@@ -47,13 +47,14 @@ func TestSignup_TestLogin(t *testing.T) {
 	if err != nil || count != 1 {
 		t.Fatalf("User not inserted into database")
 	}
+	t.Log("sucessfully signup")
 
 	defer intailizer.DB.Exec(`DELETE FROM cometoseeauth WHERE email=$1`, email)
 
 	//login__test
 	loginreq := httptest.NewRequest("POST", "/login", strings.NewReader(body))
 	loginreq.Header.Set("Content-Type", "application/json")
-
+	t.Log("Loginingg")
 	loginrec := httptest.NewRecorder()
 	controller.Login(loginrec, loginreq)
 
@@ -61,10 +62,11 @@ func TestSignup_TestLogin(t *testing.T) {
 	if loginrec.Code != http.StatusOK {
 		t.Fatalf("Expected 200,got %d", loginrec.Code)
 	}
-
+	t.Log("sucessfully login")
 	//check if jwt  is returenrd or not
 	responsestr := loginrec.Body.String()
 	if !strings.Contains(responsestr, "token") {
 		t.Fatalf("Jwt token not found in response :%s", responsestr)
 	}
+	t.Log("jwt token returned sucessfully")
 }
