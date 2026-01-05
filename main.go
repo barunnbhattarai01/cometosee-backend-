@@ -8,6 +8,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -27,6 +28,11 @@ func init() {
 
 func main() {
 	defer intailizer.DB.Close()
+
+	go func() {
+		log.Printf("pprof running in :6060")
+		http.ListenAndServe("localhost:6060", nil)
+	}()
 
 	Port := ":" + os.Getenv("PORT")
 

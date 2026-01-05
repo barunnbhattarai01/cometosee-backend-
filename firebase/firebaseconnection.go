@@ -19,6 +19,8 @@ func Initailize() *firebase.App {
 		return app
 	}
 
+	//need to change path for test and production
+	// remember it barunn for testing "GOOGLE_APPLICATION_CREDENTIALS" for development "Location"
 	opt := option.WithCredentialsFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	var err error
 	app, err = firebase.NewApp(ctx, &firebase.Config{ProjectID: os.Getenv("FIREBASE_PROJECT_ID")}, opt)
