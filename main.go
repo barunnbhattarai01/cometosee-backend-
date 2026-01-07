@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cometosee/config"
 	"cometosee/controller"
 	"cometosee/firebase"
 	"cometosee/intailizer"
@@ -28,8 +29,10 @@ func init() {
 
 func main() {
 	defer intailizer.DB.Close()
+	config.SetupGarbageCollector()
 
 	go func() {
+		//barrrrun for localhost it ok but for production it nottt ok to expose pprof
 		log.Printf("pprof running in :6060")
 		http.ListenAndServe("localhost:6060", nil)
 	}()
