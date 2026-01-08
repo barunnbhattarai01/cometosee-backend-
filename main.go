@@ -3,9 +3,11 @@ package main
 import (
 	"cometosee/config"
 	"cometosee/controller"
+	"cometosee/di"
 	"cometosee/firebase"
 	"cometosee/intailizer"
 	"cometosee/middleware"
+	"cometosee/routes"
 	"context"
 	"log"
 	"net/http"
@@ -61,9 +63,11 @@ func main() {
 		Handler: corshandler,
 	}
 	manager := controller.NewManger(context.Background())
+
+	//di
+	authcontroller := di.SetupAuthcontroller()
 	//routing
-	gor.HandleFunc("/signup", controller.Signup).Methods("POST")
-	gor.HandleFunc("/login", controller.Login).Methods("POST")
+	routes.AuthRoutes(gor, authcontroller)
 	gor.HandleFunc("/post", controller.UploadPost).Methods("POST")
 	gor.HandleFunc("/post/like", controller.LikePost).Methods("POST")
 	gor.HandleFunc("/post/comment", controller.CommentPost).Methods("POST")

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"cometosee/controller"
+	"cometosee/di"
 	"cometosee/intailizer"
 	"net/http"
 	"net/http/httptest"
@@ -33,7 +33,10 @@ func TestSignup_TestLogin(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	t.Log("Signupinggg")
 	rec := httptest.NewRecorder()
-	controller.Signup(rec, req)
+
+	//di
+	authcontroller := di.SetupAuthcontroller()
+	authcontroller.Signup(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("Expected 200, got %d", rec.Code)
@@ -56,7 +59,7 @@ func TestSignup_TestLogin(t *testing.T) {
 	loginreq.Header.Set("Content-Type", "application/json")
 	t.Log("Loginingg")
 	loginrec := httptest.NewRecorder()
-	controller.Login(loginrec, loginreq)
+	authcontroller.Login(loginrec, loginreq)
 
 	//check http status
 	if loginrec.Code != http.StatusOK {

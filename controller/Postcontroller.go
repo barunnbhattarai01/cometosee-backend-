@@ -8,9 +8,17 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var ctx = context.Background()
+var postuploads_merics = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Name: "post_uploads_total",
+		Help: "Total number of posts uploaded",
+	},
+)
 
 func UploadPost(w http.ResponseWriter, r *http.Request) {
 	type ReqBody struct {
@@ -19,6 +27,8 @@ func UploadPost(w http.ResponseWriter, r *http.Request) {
 		Community string `json:"community"`
 		Username  string `json:"username"`
 	}
+
+	postuploads_merics.Inc()
 
 	var body ReqBody
 	err := common.ParseJSONBody(r, &body)
