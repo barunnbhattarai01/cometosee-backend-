@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 )
 
@@ -68,6 +69,14 @@ func main() {
 	gor.HandleFunc("/post/comment", controller.CommentPost).Methods("POST")
 	gor.HandleFunc("/getpost", controller.Fecthpost).Methods("GET")
 	gor.HandleFunc("/ws/manager", manager.ServeWS).Methods("GET")
+
+	//promethheus mertics
+	//had to put it on differenr server for standard code
+	go func() {
+		log.Printf("promethus mertics running on:2112")
+		http.Handle("/metrics", promhttp.Handler())
+		log.Fatal(http.ListenAndServe(":2112", nil))
+	}()
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal("error in server")
