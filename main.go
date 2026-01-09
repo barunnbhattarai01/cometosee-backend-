@@ -66,12 +66,10 @@ func main() {
 
 	//di
 	authcontroller := di.SetupAuthcontroller()
+	postcontroller := di.SetupPostController()
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
-	gor.HandleFunc("/post", controller.UploadPost).Methods("POST")
-	gor.HandleFunc("/post/like", controller.LikePost).Methods("POST")
-	gor.HandleFunc("/post/comment", controller.CommentPost).Methods("POST")
-	gor.HandleFunc("/getpost", controller.Fecthpost).Methods("GET")
+	routes.PostRoutes(gor, postcontroller)
 	gor.HandleFunc("/ws/manager", manager.ServeWS).Methods("GET")
 
 	//promethheus mertics

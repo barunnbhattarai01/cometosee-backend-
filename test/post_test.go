@@ -1,7 +1,7 @@
 package test
 
 import (
-	"cometosee/controller"
+	"cometosee/di"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -52,18 +52,25 @@ func Test_POST(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	rec := httptest.NewRecorder()
+	//di
+	postcontroller := di.SetupPostController()
 
-	controller.UploadPost(rec, req)
+	postcontroller.UploadPost(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("Excepted status 200, got %d", rec.Code)
 	}
 
 	//taking doc id from response
-	resp := rec.Body.String()
-	parts := strings.Split(resp, "docId: ")
+	var respBody map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&respBody); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
 
-	docsid := strings.TrimSpace(parts[1])
+	docsid := respBody["docId"]
+	if docsid == "" {
+		t.Fatalf("docId missing in response")
+	}
 
 	//check if the post is uploaded infirebase or not
 	docs, err := client.Collection("posts").Doc(docsid).Get(ctx)
@@ -89,7 +96,7 @@ func Test_POST(t *testing.T) {
 	reqLike.Header.Set("Content-Type", "application/post")
 
 	resLike := httptest.NewRecorder()
-	controller.LikePost(resLike, reqLike)
+	postcontroller.LikePost(resLike, reqLike)
 
 	if resLike.Code != http.StatusOK {
 		t.Fatalf("Likepost excepted 200 ,got %d", resLike.Code)
@@ -116,7 +123,7 @@ func Test_POST(t *testing.T) {
 	reqcmt.Header.Set("Content-Type", "application/json")
 
 	rescmt := httptest.NewRecorder()
-	controller.CommentPost(rescmt, reqcmt)
+	postcontroller.CommentPost(rescmt, reqcmt)
 
 	if rescmt.Code != http.StatusOK {
 		t.Fatalf("Comment post expected 200 got %d", rescmt.Code)
@@ -143,7 +150,7 @@ func Test_POST(t *testing.T) {
 	reqshare.Header.Set("Content-Type", "application/json")
 
 	resshare := httptest.NewRecorder()
-	controller.SharePost(resshare, reqshare)
+	postcontroller.SharePost(resshare, reqshare)
 
 	if resshare.Code != http.StatusOK {
 		t.Fatalf("Share post expected 200 ,got %d", resshare.Code)

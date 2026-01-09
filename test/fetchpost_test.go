@@ -1,7 +1,7 @@
 package test
 
 import (
-	"cometosee/controller"
+	"cometosee/di"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +12,9 @@ func TestFetchPost(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/posts", nil)
 	rec := httptest.NewRecorder()
 
-	controller.Fecthpost(rec, req)
+	//di
+	postcontroller := di.SetupPostController()
+	postcontroller.FetchPost(rec, req)
 	t.Log("fetching posts")
 	res := rec.Result()
 	defer res.Body.Close()
