@@ -6,15 +6,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type PostController struct {
-	service *service.PostService
+	service         *service.PostService
+	PostUploadtotal prometheus.Counter
 }
 
 func NewPostController(service *service.PostService) *PostController {
+
+	counter := prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "post_uploads_total",
+			Help: "Total number of posts uploaded",
+		},
+	)
+
+	// register it with Prometheus
+	prometheus.MustRegister(counter)
 	return &PostController{
-		service: service,
+		service:         service,
+		PostUploadtotal: counter,
 	}
 }
 
@@ -26,7 +40,7 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 		Community string `json:"community"`
 		Username  string `json:"username"`
 	}
-
+	c.PostUploadtotal.Inc()
 	var body ReqBody
 	if err := common.ParseJSONBody(r, &body); err != nil {
 		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
