@@ -1,8 +1,8 @@
 package test
 
 import (
-	"cometosee/controller"
-	"context"
+	"cometosee/di"
+	"cometosee/model"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -22,10 +22,11 @@ func mustMarshal(v interface{}) json.RawMessage {
 }
 
 func TestWebSocket(t *testing.T) {
-	manager := controller.NewManger(context.TODO())
+	//di
+	wsdi := di.SetupMessage()
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		manager.ServeWS(w, r)
+		wsdi.ServeWS(w, r)
 	}))
 	defer server.Close()
 
@@ -43,9 +44,9 @@ func TestWebSocket(t *testing.T) {
 
 	t.Log("user is registering..")
 	// register user
-	if err := conn.WriteJSON(controller.Event{
-		Type: controller.EventRegister,
-		Payload: mustMarshal(controller.RegisterEvent{
+	if err := conn.WriteJSON(model.Event{
+		Type: model.EventRegister,
+		Payload: mustMarshal(model.RegisterEvent{
 			Name: "barun",
 			Room: "cricket",
 		}),
@@ -55,9 +56,9 @@ func TestWebSocket(t *testing.T) {
 	t.Log("user registered")
 	t.Log("user is sending msg")
 	// semd msg
-	if err := conn.WriteJSON(controller.Event{
-		Type: controller.EventSendMessage,
-		Payload: mustMarshal(controller.SendMessageEvent{
+	if err := conn.WriteJSON(model.Event{
+		Type: model.EventSendMessage,
+		Payload: mustMarshal(model.SendMessageEvent{
 			From:    "barun",
 			Message: "welcome to cricket commiunity",
 		}),
@@ -67,12 +68,12 @@ func TestWebSocket(t *testing.T) {
 	t.Log("user send message")
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 
-	var resp controller.Event
+	var resp model.Event
 	if err := conn.ReadJSON(&resp); err != nil {
 		t.Fatal(err)
 	}
 
-	if resp.Type != controller.EventNewMessage {
-		t.Fatalf("expected %s, got %s", controller.EventNewMessage, resp.Type)
+	if resp.Type != model.EventNewMessage {
+		t.Fatalf("expected %s, got %s", model.EventNewMessage, resp.Type)
 	}
 }

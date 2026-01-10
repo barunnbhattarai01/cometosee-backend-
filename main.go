@@ -2,13 +2,11 @@ package main
 
 import (
 	"cometosee/config"
-	"cometosee/controller"
 	"cometosee/di"
 	"cometosee/firebase"
 	"cometosee/intailizer"
 	"cometosee/middleware"
 	"cometosee/routes"
-	"context"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -62,15 +60,15 @@ func main() {
 		Addr:    handler.Addr,
 		Handler: corshandler,
 	}
-	manager := controller.NewManger(context.Background())
 
 	//di
 	authcontroller := di.SetupAuthcontroller()
 	postcontroller := di.SetupPostController()
+	wscontroller := di.SetupMessage()
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
 	routes.PostRoutes(gor, postcontroller)
-	gor.HandleFunc("/ws/manager", manager.ServeWS).Methods("GET")
+	routes.WebscoketRoutes(gor, wscontroller)
 
 	//promethheus mertics
 	//had to put it on differenr server for standard code

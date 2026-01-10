@@ -25,7 +25,14 @@ func NewPostController(service *service.PostService) *PostController {
 	)
 
 	// register it with Prometheus
-	prometheus.MustRegister(counter)
+	if err := prometheus.Register(counter); err != nil {
+		if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			counter = are.ExistingCollector.(prometheus.Counter)
+		} else {
+			panic(err)
+		}
+	}
+
 	return &PostController{
 		service:         service,
 		PostUploadtotal: counter,

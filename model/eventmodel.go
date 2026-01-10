@@ -1,4 +1,4 @@
-package controller
+package model
 
 import (
 	"encoding/json"
@@ -9,8 +9,6 @@ type Event struct {
 	Type    string          `json:"type"`
 	Payload json.RawMessage `json:"payload"`
 }
-
-type EventHandler func(event Event, c *Client) error
 
 const (
 	EventSendMessage = "send message"
@@ -30,8 +28,8 @@ type NewMessage struct {
 	Sent time.Time `json:"sent"`
 }
 
-type ChangeroomEvent struct {
-	Name string `json:"sent"`
+type ChangeRoomEvent struct {
+	Name string `json:"name"`
 }
 
 type RegisterEvent struct {
