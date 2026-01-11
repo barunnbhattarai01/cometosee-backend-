@@ -47,7 +47,7 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 		Community string `json:"community"`
 		Username  string `json:"username"`
 	}
-	c.PostUploadtotal.Inc()
+
 	var body ReqBody
 	if err := common.ParseJSONBody(r, &body); err != nil {
 		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
@@ -65,6 +65,7 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.PostUploadtotal.Inc()
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "sucessfully uploaded",
 		"docId":   id,

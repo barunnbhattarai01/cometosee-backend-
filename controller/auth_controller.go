@@ -6,14 +6,36 @@ import (
 	"cometosee/service"
 	"encoding/json"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type AuthController struct {
-	service service.AuthService
+	service   service.AuthService
+	AuthTotal prometheus.Counter
 }
 
 func NewAuthController(service service.AuthService) *AuthController {
-	return &AuthController{service: service}
+
+	counter := prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "auth_total",
+			Help: "Total number of user registered",
+		},
+	)
+	//registerr
+	if err := prometheus.Register(counter); err != nil {
+		if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			counter = are.ExistingCollector.(prometheus.Counter)
+		} else {
+			panic(err)
+		}
+	}
+
+	return &AuthController{
+		service:   service,
+		AuthTotal: counter,
+	}
 }
 
 // signup
@@ -30,7 +52,7 @@ func (c *AuthController) Signup(w http.ResponseWriter, r *http.Request) {
 		common.WriteJSONError(w, "error creating user", http.StatusInternalServerError)
 		return
 	}
-
+	c.AuthTotal.Inc()
 	common.WriteJSONMessage(w, "user created sucessfully")
 
 }
