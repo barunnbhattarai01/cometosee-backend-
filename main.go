@@ -11,6 +11,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -57,8 +58,12 @@ func main() {
 	corshandler := c.Handler(ratelimithandler)
 
 	srv := &http.Server{
-		Addr:    handler.Addr,
-		Handler: corshandler,
+		Addr:              handler.Addr,
+		Handler:           corshandler,
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ReadHeaderTimeout: 2 * time.Second,
 	}
 
 	//di
