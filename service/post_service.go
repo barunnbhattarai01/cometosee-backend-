@@ -3,6 +3,8 @@ package service
 import (
 	"cometosee/model"
 	"cometosee/repository"
+	"context"
+	"sync"
 	"time"
 )
 
@@ -35,16 +37,40 @@ func (s *PostService) AddComment(postId, userId, comment string) error {
 	return s.repo.Addcomment(postId, userId, comment)
 }
 
-func (s *PostService) FetchPost() ([]map[string]interface{}, error) {
-	posts, _ := s.repo.FetchPost()
+func (s *PostService) FetchPost(ctx context.Context) ([]map[string]interface{}, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	posts, err := s.repo.FetchPost()
+
+	if err != nil {
+		return nil, err
+	}
+
+	//waitgroup is a counter thata lets one goroutine waits for other
+	var wg sync.WaitGroup
 
 	for _, post := range posts {
+		post := post
 		id := post["id"].(string)
-		post["like_count"] = s.repo.LikeCount(id)
-		post["comment_count"] = s.repo.CommentCount(id)
-		post["comments"] = s.repo.FetchComment(id)
-		post["share_count"] = s.repo.ShareCount(id)
+
+		wg.Add(3)
+
+		go func() {
+			defer wg.Done()
+			post["like_count"] = s.repo.LikeCount(id)
+		}()
+		go func() {
+			defer wg.Done()
+			post["comment_count"] = s.repo.CommentCount(id)
+			post["comments"] = s.repo.FetchComment(id)
+		}()
+		go func() {
+			defer wg.Done()
+			post["share_count"] = s.repo.ShareCount(id)
+		}()
+
 	}
+	wg.Wait() //if counter never reached 0,it deadlock
 	return posts, nil
 }
 

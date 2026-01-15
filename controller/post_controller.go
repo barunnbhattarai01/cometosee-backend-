@@ -109,7 +109,8 @@ func (c *PostController) CommentPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *PostController) FetchPost(w http.ResponseWriter, r *http.Request) {
-	posts, _ := c.service.FetchPost()
+	context := r.Context()
+	posts, _ := c.service.FetchPost(context)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "fetch sucessfully",
 		"posts":   posts,

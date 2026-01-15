@@ -51,7 +51,7 @@ func (m *Manager) RemoveClient(c *Client) {
 	// remove from global clients
 	delete(m.Clients, c)
 
-	// remove from users
+	// remove form users
 	if c.Username != "" {
 		if cur, ok := m.Users[c.Username]; ok && cur == c {
 			delete(m.Users, c.Username)
