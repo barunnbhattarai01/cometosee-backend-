@@ -47,7 +47,7 @@ func (r *PostRepository) ToggleLike(postId, userID string) (bool, error) {
 	return true, nil
 }
 
-func (r *PostRepository) LikeCount(postId string) int {
+func (r *PostRepository) LikeCount(ctx context.Context, postId string) int {
 	client := firebase.Firestore()
 	defer client.Close()
 
@@ -76,7 +76,7 @@ func (r *PostRepository) Addcomment(postId, userId, comment string) error {
 	return err
 }
 
-func (r *PostRepository) CommentCount(postId string) int {
+func (r *PostRepository) CommentCount(ctx context.Context, postId string) int {
 	client := firebase.Firestore()
 	defer client.Close()
 
@@ -93,7 +93,7 @@ func (r *PostRepository) CommentCount(postId string) int {
 	return count
 }
 
-func (r *PostRepository) FetchComment(postID string) []model.Comment {
+func (r *PostRepository) FetchComment(ctx context.Context, postID string) []model.Comment {
 	client := firebase.Firestore()
 	defer client.Close()
 
@@ -117,7 +117,7 @@ func (r *PostRepository) FetchComment(postID string) []model.Comment {
 	return comments
 }
 
-func (r *PostRepository) FetchPost() ([]map[string]interface{}, error) {
+func (r *PostRepository) FetchPost(ctx context.Context) ([]map[string]interface{}, error) {
 	clients := firebase.Firestore()
 	defer clients.Close()
 
@@ -158,7 +158,7 @@ func (r *PostRepository) SharePost(postId, userId string) error {
 	return err
 }
 
-func (r *PostRepository) ShareCount(postId string) int {
+func (r *PostRepository) ShareCount(ctx context.Context, postId string) int {
 	client := firebase.Firestore()
 	defer client.Close()
 

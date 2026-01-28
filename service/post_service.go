@@ -40,7 +40,7 @@ func (s *PostService) AddComment(postId, userId, comment string) error {
 func (s *PostService) FetchPost(ctx context.Context) ([]map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	posts, err := s.repo.FetchPost()
+	posts, err := s.repo.FetchPost(ctx)
 
 	if err != nil {
 		return nil, err
@@ -48,6 +48,9 @@ func (s *PostService) FetchPost(ctx context.Context) ([]map[string]interface{}, 
 
 	//waitgroup is a counter thata lets one goroutine waits for other
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	sem := make(chan struct{}, 10) //limit concurrency to 10
 
 	for _, post := range posts {
 		post := post
@@ -57,16 +60,37 @@ func (s *PostService) FetchPost(ctx context.Context) ([]map[string]interface{}, 
 
 		go func() {
 			defer wg.Done()
-			post["like_count"] = s.repo.LikeCount(id)
+			sem <- struct{}{}        //acquire semaphore
+			defer func() { <-sem }() //release semaphore
+			count := s.repo.LikeCount(ctx, id)
+			mu.Lock()
+			post["like_count"] = count
+			mu.Unlock()
 		}()
 		go func() {
 			defer wg.Done()
-			post["comment_count"] = s.repo.CommentCount(id)
-			post["comments"] = s.repo.FetchComment(id)
+			sem <- struct{}{}        //acquire semaphore
+			defer func() { <-sem }() //release semaphore
+
+			comments := s.repo.FetchComment(ctx, id)
+			commentCount := s.repo.CommentCount(ctx, id)
+
+			mu.Lock()
+			post["comment_count"] = commentCount
+			post["comments"] = comments
+			mu.Unlock()
+
 		}()
 		go func() {
 			defer wg.Done()
-			post["share_count"] = s.repo.ShareCount(id)
+			//semaphore is like traffic controller and limits number of goroutine accessing a resource
+			sem <- struct{}{}        //acquire semaphore
+			defer func() { <-sem }() //release semaphore
+
+			count := s.repo.ShareCount(ctx, id)
+			mu.Lock()
+			post["share_count"] = count
+			mu.Unlock()
 		}()
 
 	}
