@@ -70,10 +70,12 @@ func main() {
 	authcontroller := di.SetupAuthcontroller()
 	postcontroller := di.SetupPostController()
 	wscontroller := di.SetupMessage()
+	userfilterctrl := di.UserfilterDI()
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
 	routes.PostRoutes(gor, postcontroller)
 	routes.WebscoketRoutes(gor, wscontroller)
+	routes.SetupUserfilterroutes(gor, userfilterctrl)
 
 	//promethheus mertics
 	//had to put it on differenr server for standard code
