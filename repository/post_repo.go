@@ -177,3 +177,28 @@ func (r *PostRepository) ShareCount(ctx context.Context, postId string) int {
 	}
 	return count
 }
+
+func (r *PostRepository) Latest10Likers(ctx context.Context, postId string) ([]string, error) {
+	client := firebase.Firestore()
+	defer client.Close()
+
+	iter := client.Collection("posts").
+		Doc(postId).
+		Collection("likes").
+		OrderBy("created", firestore.Desc).
+		Limit(10).
+		Documents(ctx)
+
+	var usernames []string
+
+	for {
+		doc, err := iter.Next()
+		if err != nil {
+			break
+		}
+
+		usernames = append(usernames, doc.Ref.ID)
+	}
+
+	return usernames, nil
+}

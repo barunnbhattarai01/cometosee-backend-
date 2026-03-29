@@ -12,4 +12,5 @@ func PostRoutes(gor *mux.Router, postcontroller *controller.PostController) {
 	gor.HandleFunc("/post/comment", postcontroller.CommentPost).Methods("POST")
 	gor.HandleFunc("/post/share", postcontroller.SharePost).Methods("POST")
 	gor.HandleFunc("/getpost", postcontroller.FetchPost).Methods("GET")
+	gor.HandleFunc("/latestlike", postcontroller.Latestlikes).Methods("GET")
 }
