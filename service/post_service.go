@@ -102,6 +102,6 @@ func (s *PostService) SharePost(postId, userId string) error {
 	return s.repo.SharePost(postId, userId)
 }
 
-func (s *PostService) Latestlikes(ctx context.Context, postId string) ([]string, error) {
-	return s.repo.Latest10Likers(ctx, postId)
+func (s *PostService) Latestlikes(ctx context.Context) (string, error) {
+	return s.repo.LatestLikeAcrossPosts(ctx)
 }

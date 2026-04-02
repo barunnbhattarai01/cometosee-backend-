@@ -138,23 +138,13 @@ func (c *PostController) SharePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *PostController) Latestlikes(w http.ResponseWriter, r *http.Request) {
-	type ReqBody struct {
-		PostId string `json:"post_id"`
-	}
-
-	var body ReqBody
-	if err := common.ParseJSONBody(r, &body); err != nil {
-		common.WriteJSONError(w, "invalid request", http.StatusBadRequest)
-		return
-	}
-
-	likers, err := c.service.Latestlikes(r.Context(), body.PostId)
+	liker, err := c.service.Latestlikes(r.Context())
 	if err != nil {
-		common.WriteJSONError(w, "failed to fetch latest likers", http.StatusInternalServerError)
+		common.WriteJSONError(w, "failed to fetch latest liker", http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "latest likers fetched successfully",
-		"likers":  likers,
+		"message": "latest liker fetched successfully",
+		"liker":   liker,
 	})
 }

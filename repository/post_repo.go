@@ -178,27 +178,41 @@ func (r *PostRepository) ShareCount(ctx context.Context, postId string) int {
 	return count
 }
 
-func (r *PostRepository) Latest10Likers(ctx context.Context, postId string) ([]string, error) {
+func (r *PostRepository) LatestLikeAcrossPosts(ctx context.Context) (string, error) {
 	client := firebase.Firestore()
 	defer client.Close()
 
-	iter := client.Collection("posts").
-		Doc(postId).
-		Collection("likes").
-		OrderBy("created", firestore.Desc).
-		Limit(10).
-		Documents(ctx)
+	postsIter := client.Collection("posts").Documents(ctx)
 
-	var usernames []string
+	var latestUserId string
+	var latestTime time.Time
 
 	for {
-		doc, err := iter.Next()
+		postDoc, err := postsIter.Next()
 		if err != nil {
 			break
 		}
+		postId := postDoc.Ref.ID
 
-		usernames = append(usernames, doc.Ref.ID)
+		likeIter := client.Collection("posts").Doc(postId).Collection("likes").
+			OrderBy("created", firestore.Desc).Limit(1).Documents(ctx)
+
+		likeDoc, err := likeIter.Next()
+		if err != nil {
+			continue
+		}
+
+		data := likeDoc.Data()
+		created, ok := data["created"].(time.Time)
+		if !ok {
+			continue
+		}
+
+		if latestTime.IsZero() || created.After(latestTime) {
+			latestTime = created
+			latestUserId = likeDoc.Ref.ID
+		}
 	}
 
-	return usernames, nil
+	return latestUserId, nil
 }
