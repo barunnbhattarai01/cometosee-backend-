@@ -214,5 +214,5 @@ func (r *PostRepository) LatestLikeAcrossPosts(ctx context.Context) (string, err
 		}
 	}
 
-	return latestUserId, nil
+	return latestUserId,nil
 }
