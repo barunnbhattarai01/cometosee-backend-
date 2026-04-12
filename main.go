@@ -24,6 +24,7 @@ type Api struct {
 
 func init() {
 	intailizer.Loadenv()
+	config.InitCache()
 	intailizer.DatabaseConnection()
 	intailizer.Syncdatabase()
 	firebase.Initailize()
