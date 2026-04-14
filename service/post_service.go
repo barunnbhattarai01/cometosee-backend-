@@ -1,7 +1,6 @@
 package service
 
 import (
-	"cometosee/config"
 	"cometosee/model"
 	"cometosee/repository"
 	"context"
@@ -42,22 +41,22 @@ func (s *PostService) FetchPost(ctx context.Context) ([]map[string]interface{}, 
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	cacheKey := "fecthpost"
+	//cacheKey := "fecthpost"
 
 	posts, err := s.repo.FetchPost(ctx)
 
 	//check cache firstt
-	if cacheData, found := config.GetCache(cacheKey); found {
-		posts, ok := cacheData.([]map[string]interface{})
-		if ok {
-			return posts, nil
-		}
-	}
+	//	if cacheData, found := config.GetCache(cacheKey); found {
+	//posts, ok := cacheData.([]map[string]interface{})
+	//if ok {
+	//		return posts, nil
+	//}
+	//	}
 
 	if err != nil {
 		return nil, err
 	}
-	config.SetCache(cacheKey, posts)
+	//config.SetCache(cacheKey, posts)
 
 	//waitgroup is a counter thata lets one goroutine waits for other
 	var wg sync.WaitGroup

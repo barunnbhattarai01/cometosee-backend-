@@ -27,10 +27,8 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		tokenString := parts[1]
-		secret := os.Getenv("JWT_TOKEN")
-		if secret == "" {
-			secret = "default_secret"
-		}
+		secret := os.Getenv("SECRET")
+		fmt.Println("secret:", secret)
 
 		//validate the jwt
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -38,13 +36,16 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 				return nil, fmt.Errorf("umexpected sigining method")
 			}
 			return []byte(secret), nil
+
 		})
 
 		if err != nil || !token.Valid {
 			http.Error(w, `{"message":"invlaid token"}`, http.StatusUnauthorized)
+			fmt.Println("token error:", err)
 			return
 		}
-		//vlaid then procedd to the next handler
+
 		next(w, r)
+
 	}
 }
