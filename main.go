@@ -2,12 +2,12 @@ package main
 
 import (
 	"cometosee/config"
+	"cometosee/controller"
 	"cometosee/di"
 	"cometosee/firebase"
 	"cometosee/intailizer"
 	"cometosee/middleware"
 	"cometosee/routes"
-	"encoding/json"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/mukezhz/pay-np/esewa"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 )
@@ -79,7 +78,8 @@ func main() {
 	routes.PostRoutes(gor, postcontroller)
 	routes.WebscoketRoutes(gor, wscontroller)
 	routes.SetupUserfilterroutes(gor, userfilterctrl)
-
+	gor.HandleFunc("/esewa/initiate", controller.InitiateHandler).Methods("POST")
+	gor.HandleFunc("/esewa/verify", controller.VerifyHandler).Methods("GET")
 	//promethheus mertics
 	//had to put it on differenr server for standard code
 	go func() {
@@ -91,49 +91,4 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal("error in server")
 	}
-}
-
-func initiateHandler(w http.ResponseWriter, r *http.Request) {
-	payload := &esewa.EsewaPayload{
-		Amount:           "100",
-		TaxAmount:        "0",
-		ProductCode:      "EPAYTEST", // eSewa sandbox merchant code
-		TotalAmount:      "100",
-		TransactionUUID:  "txn-001",
-		SuccessURL:       "http://localhost:8080/esewa/verify",
-		FailureURL:       "http://localhost:8080/esewa/failure",
-		SignedFieldNames: "total_amount,transaction_uuid,product_code",
-	}
-
-	client, err := esewa.New("8gBm/:&EnhH.1/q", payload) // sandbox secret
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	sig, err := client.GenerateSignature()
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	payload.Signature = sig
-	json.NewEncoder(w).Encode(payload)
-}
-
-func verifyHandler(w http.ResponseWriter, r *http.Request) {
-	data := r.URL.Query().Get("data")
-	if data == "" {
-		http.Error(w, "missing data param", 400)
-		return
-	}
-
-	client, _ := esewa.New("8gBm/:&EnhH.1/q", &esewa.EsewaPayload{})
-	err := client.VerifySignature(data)
-	if err != nil {
-		http.Error(w, "invalid signature: "+err.Error(), 400)
-		return
-	}
-
-	w.Write([]byte("payment verified ok"))
 }

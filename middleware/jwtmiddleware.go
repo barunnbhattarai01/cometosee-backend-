@@ -28,7 +28,6 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 		}
 		tokenString := parts[1]
 		secret := os.Getenv("SECRET")
-		fmt.Println("secret:", secret)
 
 		//validate the jwt
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
