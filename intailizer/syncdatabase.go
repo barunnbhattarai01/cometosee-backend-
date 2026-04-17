@@ -44,5 +44,35 @@ func Syncdatabase() {
 		log.Fatalf("error in creting messaging table :%v", err)
 	}
 
+	subscritiontable := `
+create table if not exists subscriptiontable(
+id serial primary key,
+	user_email text not null,
+	start_date timestamp not null default now(),
+	end_date timestamp
+)
+	`
+
+	_, err = DB.Exec(subscritiontable)
+
+	if err != nil {
+		log.Fatalf("error in creating subscription table :%v", err)
+	}
+
+	paymenttable := `
+create table if not exists paymenttable(
+id serial primary key,
+	user_email text not null,
+	amount decimal(10, 2) not null,
+	payment_date timestamp not null default now()
+)
+	`
+
+	_, err = DB.Exec(paymenttable)
+
+	if err != nil {
+		log.Fatalf("error in creating payment table :%v", err)
+	}
+
 	fmt.Print("table ready")
 }
