@@ -164,5 +164,9 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//suncrintion logic
+	var c SubscriptionController
+	c.SubscribeUser("barunnbhattarai@gmail.com")
 	w.Write([]byte("payment verified ok"))
+
 }

@@ -9,6 +9,7 @@ type SubscriptionRepository interface {
 	CreateSubscription(userEmail string, endDate *string) error
 	GetSubscriptionByEmail(userEmail string) (*model.Subscription, error)
 	UpdateSubscriptionEndDate(userEmail string, newEndDate *string) error
+	DeleteSubscription(userEmail string) error
 }
 
 type subscriptionRepo struct{}
@@ -37,5 +38,11 @@ func (r *subscriptionRepo) GetSubscriptionByEmail(userEmail string) (*model.Subs
 func (r *subscriptionRepo) UpdateSubscriptionEndDate(userEmail string, newEndDate *string) error {
 	query := `UPDATE subscriptiontable SET end_date = $1 WHERE user_email = $2`
 	_, err := intailizer.DB.Exec(query, newEndDate, userEmail)
+	return err
+}
+
+func (r *subscriptionRepo) DeleteSubscription(userEmail string) error {
+	query := `DELETE FROM subscriptiontable WHERE user_email = $1`
+	_, err := intailizer.DB.Exec(query, userEmail)
 	return err
 }
