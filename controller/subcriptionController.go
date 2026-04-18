@@ -1,6 +1,8 @@
 package controller
 
-import "cometosee/service"
+import (
+	"cometosee/service"
+)
 
 type SubscriptionController struct {
 	service service.SubscriptionService
@@ -28,6 +30,11 @@ func (c *SubscriptionController) UnsubscribeUser(email string) error {
 	return nil
 }
 
-func (c *SubscriptionController) GetSubscriptionStatus(email string) (bool, error) {
+func (c *SubscriptionController) GetSubscriptionStatus(email string) bool {
 	return c.service.GetSubscriptionStatus(email)
+}
+
+func (c *SubscriptionController) UpdateSubscriptionEndDate(email string) error {
+	service := c.service.UpdateSubscriptionEndDate(email)
+	return service
 }

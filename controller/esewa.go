@@ -2,6 +2,8 @@ package controller
 
 import (
 	"cometosee/model"
+	"cometosee/repository"
+	"cometosee/service"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -147,7 +149,18 @@ func InitiateHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload.Signature = sig
 	w.Header().Set("Content-Type", "application/json")
+
+	subrepo := repository.NewSubscriptionRepository()
+	subservice := service.NewSubscriptionService(subrepo)
+	c := NewSubscriptionController(subservice)
+	if c.GetSubscriptionStatus("barunnbhattarai@gmail.com") == false {
+		c.SubscribeUser("barunnbhattarai@gmail.com")
+	} else {
+		c.UpdateSubscriptionEndDate("barunnbhattarai@gmail.com")
+	}
+
 	json.NewEncoder(w).Encode(payload)
+
 }
 
 func VerifyHandler(w http.ResponseWriter, r *http.Request) {
@@ -165,8 +178,14 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//suncrintion logic
-	var c SubscriptionController
-	c.SubscribeUser("barunnbhattarai@gmail.com")
+	subrepo := repository.NewSubscriptionRepository()
+	subservice := service.NewSubscriptionService(subrepo)
+	c := NewSubscriptionController(subservice)
+
+	if c.GetSubscriptionStatus("barunnbhattarai@gmail.com") == false {
+		c.SubscribeUser("barunnbhattarai@gmail.com")
+		return
+	}
 	w.Write([]byte("payment verified ok"))
 
 }

@@ -3,12 +3,13 @@ package repository
 import (
 	"cometosee/intailizer"
 	"cometosee/model"
+	"time"
 )
 
 type SubscriptionRepository interface {
-	CreateSubscription(userEmail string, endDate *string) error
+	CreateSubscription(userEmail string, startdate time.Time, endDate time.Time) error
 	GetSubscriptionByEmail(userEmail string) (*model.Subscription, error)
-	UpdateSubscriptionEndDate(userEmail string, newEndDate *string) error
+	UpdateSubscriptionEndDate(userEmail string, newEndDate time.Time) error
 	DeleteSubscription(userEmail string) error
 }
 
@@ -18,9 +19,9 @@ func NewSubscriptionRepository() SubscriptionRepository {
 	return &subscriptionRepo{}
 }
 
-func (r *subscriptionRepo) CreateSubscription(userEmail string, endDate *string) error {
-	query := `INSERT INTO subscriptiontable (user_email, end_date) VALUES ($1, $2)`
-	_, err := intailizer.DB.Exec(query, userEmail, endDate)
+func (r *subscriptionRepo) CreateSubscription(userEmail string, startdate time.Time, endDate time.Time) error {
+	query := `INSERT INTO subscriptiontable (user_email, start_date, end_date) VALUES ($1, $2, $3)`
+	_, err := intailizer.DB.Exec(query, userEmail, startdate, endDate)
 	return err
 }
 
@@ -35,7 +36,7 @@ func (r *subscriptionRepo) GetSubscriptionByEmail(userEmail string) (*model.Subs
 	return &subscription, nil
 }
 
-func (r *subscriptionRepo) UpdateSubscriptionEndDate(userEmail string, newEndDate *string) error {
+func (r *subscriptionRepo) UpdateSubscriptionEndDate(userEmail string, newEndDate time.Time) error {
 	query := `UPDATE subscriptiontable SET end_date = $1 WHERE user_email = $2`
 	_, err := intailizer.DB.Exec(query, newEndDate, userEmail)
 	return err
