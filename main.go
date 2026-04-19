@@ -73,11 +73,13 @@ func main() {
 	postcontroller := di.SetupPostController()
 	wscontroller := di.SetupMessage()
 	userfilterctrl := di.UserfilterDI()
+	subcriptiondi := di.SubcribntionDi()
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
 	routes.PostRoutes(gor, postcontroller)
 	routes.WebscoketRoutes(gor, wscontroller)
 	routes.SetupUserfilterroutes(gor, userfilterctrl)
+	routes.SubcribtionRoute(gor, subcriptiondi)
 	gor.HandleFunc("/esewa/initiate", controller.InitiateHandler).Methods("POST")
 	gor.HandleFunc("/esewa/verify", controller.VerifyHandler).Methods("GET")
 	//promethheus mertics

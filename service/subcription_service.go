@@ -81,7 +81,7 @@ func (s *subscriptionService) UpdateSubscriptionEndDate(email string) error {
 	if email == "" {
 		return nil
 	}
-	err := s.repo.UpdateSubscriptionEndDate(email, time.Now().AddDate(0, 1, 0))
+	err := s.repo.UpdateSubscriptionEndDate(email)
 	if err != nil {
 		return err
 	}

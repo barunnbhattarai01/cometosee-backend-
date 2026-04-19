@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"cometosee/common"
 	"cometosee/service"
+	"encoding/json"
+	"net/http"
 )
 
 type SubscriptionController struct {
@@ -21,13 +24,25 @@ func (c *SubscriptionController) SubscribeUser(email string) error {
 	return nil
 }
 
-func (c *SubscriptionController) UnsubscribeUser(email string) error {
-	serviceErr := c.service.UnsubscribeUser(email)
+func (c *SubscriptionController) UnsubscribeUser(w http.ResponseWriter, r *http.Request) {
+
+	type requestBody struct {
+		Email string `json:"email"`
+	}
+
+	var reqBody requestBody
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	serviceErr := c.service.UnsubscribeUser(reqBody.Email)
 
 	if serviceErr != nil {
-		return serviceErr
+		common.WriteJSONError(w, "failed to unsubscribe user", http.StatusInternalServerError)
+		return
 	}
-	return nil
+
+	common.WriteJSONMessage(w, "sucessfully deleted the subcription")
 }
 
 func (c *SubscriptionController) GetSubscriptionStatus(email string) bool {
