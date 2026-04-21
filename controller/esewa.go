@@ -150,15 +150,6 @@ func InitiateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.Signature = sig
 	w.Header().Set("Content-Type", "application/json")
 
-	subrepo := repository.NewSubscriptionRepository()
-	subservice := service.NewSubscriptionService(subrepo)
-	c := NewSubscriptionController(subservice)
-	if c.GetSubscriptionStatus("barunnbhattarai@gmail.com") == false {
-		c.SubscribeUser("barunnbhattarai@gmail.com")
-	} else {
-		c.UpdateSubscriptionEndDate("barunnbhattarai@gmail.com")
-	}
-
 	json.NewEncoder(w).Encode(payload)
 
 }
