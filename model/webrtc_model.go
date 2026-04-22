@@ -15,10 +15,11 @@ type PeerInfo struct {
 }
 
 type TrackInfo struct {
-	ID    string
-	Kind  string // audio or video
-	Track *webrtc.TrackLocalStaticSample
-	SSRC  uint32 //ssrc is unique id for each track in webrtc session
+	ID     string
+	RoomID string
+	Kind   string // audio or video
+	Track  *webrtc.TrackLocalStaticSample
+	SSRC   uint32 //ssrc is unique id for each track in webrtc session
 }
 
 type SignalingMessage struct {

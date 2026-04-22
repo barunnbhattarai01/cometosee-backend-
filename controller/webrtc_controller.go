@@ -6,6 +6,8 @@ import (
 	"cometosee/service"
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 //so udp(user datagram protocol) doesn't require a connection to be established before data is sent, it is often used for real-time applications like video conferencing, online gaming, and live streaming where low latency is crucial.
@@ -68,7 +70,9 @@ func (c *WebRTCController) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 
 // get peers in room
 func (c *WebRTCController) GetPeersInRoom(w http.ResponseWriter, r *http.Request) {
-	roomId := r.URL.Query().Get("roomId")
+	id := mux.Vars(r)
+	roomId := id["roomId"]
+
 	if roomId == "" {
 		http.Error(w, "Missing roomId parameter", http.StatusBadRequest)
 		return
@@ -88,15 +92,23 @@ func (c *WebRTCController) GetPeersInRoom(w http.ResponseWriter, r *http.Request
 // add track
 func (c *WebRTCController) AddTrack(w http.ResponseWriter, r *http.Request) {
 	type AddTrackRequest struct {
-		RoomID string `json:"roomId"`
-		Track  *model.TrackInfo
+		RoomID  string `json:"roomId"`
+		TrackID string `json:"trackId"`
+		Kind    string `json:"kind"`
 	}
 	var req AddTrackRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
-	err := c.service.AddTrack(req.RoomID, req.Track)
+
+	track := &model.TrackInfo{
+		ID:     req.TrackID,
+		RoomID: req.RoomID,
+		Kind:   req.Kind,
+	}
+
+	err := c.service.AddTrack(req.RoomID, track)
 	if err != nil {
 		http.Error(w, "Failed to add track: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -128,7 +140,10 @@ func (c *WebRTCController) RemoveTrack(w http.ResponseWriter, r *http.Request) {
 //get tracks in room
 
 func (c *WebRTCController) GetTracksInRoom(w http.ResponseWriter, r *http.Request) {
-	roomId := r.URL.Query().Get("roomId")
+
+	id := mux.Vars(r)
+	roomId := id["roomId"]
+
 	if roomId == "" {
 		http.Error(w, "Missing roomId parameter", http.StatusBadRequest)
 		return

@@ -18,7 +18,7 @@ type WebRTCRepository interface {
 }
 
 //peer contain peerconnection and datachannel
-//peerconnection means audio/video streams ,ice connection ,not connection
+//peerconnection means audio/video streams ,ice connection ,nat connection
 
 //tracks means audio or video
 
@@ -58,6 +58,8 @@ func (r *webRTCRepo) SaveTrackInfo(trackInfo *model.TrackInfo) error {
 	}
 
 	r.tracks[trackInfo.ID] = trackInfo
+
+	r.roomsTrack[trackInfo.RoomID] = append(r.roomsTrack[trackInfo.RoomID], trackInfo)
 
 	return nil
 }
