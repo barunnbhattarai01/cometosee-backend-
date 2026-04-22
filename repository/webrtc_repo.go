@@ -18,7 +18,7 @@ type WebRTCRepository interface {
 }
 
 //peer contain peerconnection and datachannel
-//peerconnection means audio/video streams ,ice connection ,nat connection
+//peerconnection means audio/video streams ,ice connection ,not connection
 
 //tracks means audio or video
 
