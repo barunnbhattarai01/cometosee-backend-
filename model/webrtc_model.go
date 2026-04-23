@@ -23,7 +23,10 @@ type TrackInfo struct {
 }
 
 type SignalingMessage struct {
+	RoomID    string `json:"roomId"`
 	Type      string `json:"type"` // offer, answer, candidate
+	FromID    string `json:"fromId"`
+	ToID      string `json:"toId"`
 	SDP       string `json:"sdp,omitempty"`
 	Candidate string `json:"candidate,omitempty"` //for ice candiate and ice help to find the best path and bypass nat and firewall
 }
