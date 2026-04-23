@@ -31,11 +31,25 @@ func (s *WebsocketService) SendMessage(event model.Event, c *model.Client) error
 	s.Manager.RLock()
 	defer s.Manager.RUnlock()
 
-	for client := range s.Manager.Rooms[c.ChatRoom] {
-		select {
-		case client.Egress <- out:
-		default:
+	//send to recipient
+	if msg.To != "" {
+		if target, ok := s.Manager.Users[msg.To]; ok {
+			select {
+			case target.Egress <- out:
+			default:
+				log.Printf("target peer %s is not ready to receive\n", msg.To)
+			}
 		}
 	}
+
+	//echo back to sender too(so tgheir msg appears in their own chat)
+	if sender, ok := s.Manager.Users[msg.From]; ok {
+		select {
+		case sender.Egress <- out:
+		default:
+			log.Printf("sender peer %s is not ready to receive\n", msg.From)
+		}
+	}
+
 	return nil
 }

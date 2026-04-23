@@ -19,7 +19,8 @@ func (s *WebsocketService) Register(event model.Event, c *model.Client) error {
 	s.Manager.Lock()
 	defer s.Manager.Unlock()
 
-	if _, ok := s.Manager.Users[re.Name]; ok {
+	if old, ok := s.Manager.Users[re.Name]; ok && old != c {
+		delete(s.Manager.Clients, old)
 		return fmt.Errorf("username already exists")
 	}
 

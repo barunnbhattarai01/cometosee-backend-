@@ -38,7 +38,7 @@ func (c *WSController) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	client := &model.Client{
 		Connection: conn,
-		Egress:     make(chan model.Event),
+		Egress:     make(chan model.Event, 256),
 	}
 
 	c.Service.Manager.Clients[client] = true
@@ -49,12 +49,14 @@ func (c *WSController) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 func (c *WSController) read(client *model.Client) {
 	defer func() {
-		c.Service.Manager.RemoveClient(client)
+		client.ClosedOnce.Do(func() {
+			c.Service.Manager.RemoveClient(client)
+		})
 	}()
 
 	conn := client.Connection
 
-	conn.SetReadLimit(512)
+	conn.SetReadLimit(65536)
 	conn.SetReadDeadline(time.Now().Add(pongWait))
 	conn.SetPongHandler(func(string) error {
 		return conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -94,7 +96,9 @@ func (c *WSController) write(client *model.Client) {
 	ticker := time.NewTicker(pingInterval)
 	defer func() {
 		ticker.Stop()
-		c.Service.Manager.RemoveClient(client)
+		client.ClosedOnce.Do(func() {
+			c.Service.Manager.RemoveClient(client)
+		})
 	}()
 
 	for {

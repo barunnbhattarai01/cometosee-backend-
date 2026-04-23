@@ -46,6 +46,7 @@ func (s *WebsocketService) HandleWebRTCOffer(event model.Event, c *model.Client)
 	if err := json.Unmarshal(event.Payload, &signal); err != nil {
 		return err
 	}
+	fmt.Printf("Received WebRTC offer from %s to %s for room %s\n", signal.FromID, signal.ToID, signal.RoomID)
 	return s.forwardSignal(model.Web_rtcoffer, signal, c)
 }
 
@@ -55,6 +56,7 @@ func (s *WebsocketService) HandleWebRTCAnswer(event model.Event, c *model.Client
 	if err := json.Unmarshal(event.Payload, &signal); err != nil {
 		return err
 	}
+	fmt.Printf("Received WebRTC answer from %s to %s for room %s\n", signal.FromID, signal.ToID, signal.RoomID)
 	return s.forwardSignal(model.Web_rtcanswer, signal, c)
 }
 
@@ -64,6 +66,7 @@ func (s *WebsocketService) HandleWebRTCCandidate(event model.Event, c *model.Cli
 	if err := json.Unmarshal(event.Payload, &signal); err != nil {
 		return err
 	}
+	fmt.Printf("Received WebRTC candidate from %s to %s for room %s\n", signal.FromID, signal.ToID, signal.RoomID)
 	return s.forwardSignal(model.Web_rtccandidate, signal, c)
 }
 
@@ -82,9 +85,14 @@ func (s *WebsocketService) forwardSignal(eventType string, signal model.Signalin
 		return err
 	}
 
-	target.Egress <- model.Event{
+	select {
+	case target.Egress <- model.Event{
 		Type:    eventType,
 		Payload: payload,
+	}:
+	default:
+		return fmt.Errorf("target peer %s is not ready to receive", signal.ToID)
 	}
+	fmt.Printf("Forwarding %s from %s to %s for room %s\n", eventType, signal.FromID, signal.ToID, signal.RoomID)
 	return nil
 }
