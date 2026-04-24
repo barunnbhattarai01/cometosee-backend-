@@ -78,3 +78,44 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		"username": username,
 	})
 }
+
+func (c *AuthController) ForgetPassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var body model.Auth
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	model.Email = body.Email
+	err := c.service.ForgetPassword(body.Email)
+
+	if err != nil {
+		common.WriteJSONError(w, "error in changing password", http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "sucessfully  verify the email",
+	})
+}
+
+func (c *AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var body model.Auth
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		common.WriteJSONError(w, "error request body", http.StatusBadRequest)
+		return
+	}
+
+	err := c.service.ResetPassword(model.Email, body.Otp.Code, body.Password)
+	if err != nil {
+		common.WriteJSONError(w, "error in reseting password", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "sucessfully change the password",
+	})
+}

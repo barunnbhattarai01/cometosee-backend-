@@ -8,7 +8,7 @@ import (
 type AuthRepositry interface {
 	CreateUser(user model.Auth) error
 	GetUserByEmail(email string) (*model.Auth, error)
-	ForgetPassword(email, password string) (string, error)
+	ForgetPassword(email, password string) error
 }
 
 type authrepo struct{}
@@ -33,13 +33,13 @@ func (r *authrepo) GetUserByEmail(email string) (*model.Auth, error) {
 	return &user, nil
 }
 
-func (r *authrepo) ForgetPassword(email, password string) (string, error) {
+func (r *authrepo) ForgetPassword(email, password string) error {
 
 	query := `update cometoseeauth set password=$1 where email=$2`
 	_, err := intailizer.DB.Exec(query, password, email)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return "password updated successfully", nil
+	return nil
 }

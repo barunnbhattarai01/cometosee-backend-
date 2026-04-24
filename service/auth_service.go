@@ -5,7 +5,9 @@ import (
 	"cometosee/repository"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"math/big"
+	"net/smtp"
 	"os"
 	"strings"
 	"time"
@@ -17,6 +19,8 @@ import (
 type AuthService interface {
 	Signup(user model.Auth) error
 	Login(email, password string) (string, string, error)
+	ForgetPassword(email string) error
+	ResetPassword(email, otp, newPassword string) error
 }
 
 type authService struct {
@@ -106,15 +110,59 @@ func verifyotp(identifier string, otp string) bool {
 	return true
 }
 
-func (s *authService) ForgetPassword(email string) (string, error) {
+func (s *authService) ForgetPassword(email string) error {
 	email = strings.ToLower(email)
+
 	_, err := s.repo.GetUserByEmail(email)
 	if err != nil {
-		return "", err
+		return errors.New("user not found")
 	}
-	otp := genrateOtp()
 
+	otp := genrateOtp()
 	SaveOtp(email, otp)
-	// In real application, send this OTP to user's email
-	return otp, nil
+
+	if err := sendEmail(email, otp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func sendEmail(to string, otp string) error {
+	from := "barunnbhattarai@gmail.com"
+	password := os.Getenv("APP_PASSWORD")
+
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+
+	message := []byte(fmt.Sprintf("Subject: Password Reset OTP\n\nYour OTP is: %s", otp))
+
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, message)
+	return err
+
+}
+
+func (s *authService) ResetPassword(email, otp, newPassword string) error {
+	email = strings.ToLower(email)
+
+	// Verify OTP
+	if !verifyotp(email, otp) {
+		return errors.New("invalid or expired OTP")
+	}
+
+	// hash new password
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 10)
+	if err != nil {
+		return err
+	}
+
+	// Update password in DB
+	err = s.repo.ForgetPassword(email, string(hash))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
