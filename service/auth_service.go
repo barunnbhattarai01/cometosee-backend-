@@ -91,23 +91,23 @@ func SaveOtp(idetifier string, otp string) {
 	}
 }
 
-func verifyotp(identifier string, otp string) bool {
+func verifyotp(identifier string, otp string) error {
 	data, exists := model.OTPStored[identifier]
 	if !exists {
-		return false
+		return errors.New("otp not found")
 	}
 	//check expiry first
 	if data.ExpiredAt.Before(time.Now()) {
 		delete(model.OTPStored, identifier)
-		return false
+		return errors.New("otp expired")
 	}
 	//check code
 	if data.Code != otp {
-		return false
+		return errors.New("otp didnot match")
 	}
 	//valid otp, delete it and return true
 	delete(model.OTPStored, identifier)
-	return true
+	return nil
 }
 
 func (s *authService) ForgetPassword(email string) error {
@@ -148,8 +148,9 @@ func (s *authService) ResetPassword(email, otp, newPassword string) error {
 	email = strings.ToLower(email)
 
 	// Verify OTP
-	if !verifyotp(email, otp) {
-		return errors.New("invalid or expired OTP")
+	err := verifyotp(email, otp)
+	if err != nil {
+		return errors.New("error in verifying otp")
 	}
 
 	// hash new password

@@ -109,7 +109,7 @@ func (c *AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.service.ResetPassword(model.Email, body.Otp.Code, body.Password)
+	err := c.service.ResetPassword(body.Email, body.Otp.Code, body.Password)
 	if err != nil {
 		common.WriteJSONError(w, "error in reseting password", http.StatusBadRequest)
 		return
