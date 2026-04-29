@@ -109,6 +109,7 @@ func (c *PostController) CommentPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *PostController) FetchPost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	context := r.Context()
 	posts, _ := c.service.FetchPost(context)
 	json.NewEncoder(w).Encode(map[string]interface{}{
