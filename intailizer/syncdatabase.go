@@ -74,5 +74,25 @@ id serial primary key,
 		log.Fatalf("error in creating payment table :%v", err)
 	}
 
+	connectiontable := `CREATE TABLE connections (
+    id BIGSERIAL PRIMARY KEY,
+    user_id_1 UUID NOT NULL,
+    user_id_2 UUID NOT NULL,
+    status TEXT NOT NULL,
+    requested_by UUID NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+
+    CHECK (user_id_1 < user_id_2)
+);
+
+CREATE UNIQUE INDEX unique_pair
+ON connections(user_id_1, user_id_2);`
+
+	_, err = DB.Exec(connectiontable)
+
+	if err != nil {
+		log.Fatalf("error in creating connection table :%v", err)
+	}
+
 	fmt.Print("table ready")
 }
