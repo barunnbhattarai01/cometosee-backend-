@@ -48,7 +48,7 @@ func main() {
 	gor := mux.NewRouter()
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:64953"},
+		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
@@ -75,15 +75,18 @@ func main() {
 	userfilterctrl := di.UserfilterDI()
 	subcriptiondi := di.SubcribntionDi()
 	webrtcdi := di.SetupWebRTC()
+	connectiondi := di.SetupConnectionController()
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
 	routes.PostRoutes(gor, postcontroller)
 	routes.WebscoketRoutes(gor, wscontroller)
 	routes.SetupUserfilterroutes(gor, userfilterctrl)
+	routes.ConnectionRoutes(gor, connectiondi)
 	routes.WEbrtcroutes(gor, webrtcdi)
 	routes.SubcribtionRoute(gor, subcriptiondi)
 	gor.HandleFunc("/esewa/initiate", controller.InitiateHandler).Methods("POST")
 	gor.HandleFunc("/esewa/verify", controller.VerifyHandler).Methods("GET")
+	gor.HandleFunc("/esewa/failure", controller.FailureHandler).Methods("GET")
 	//promethheus mertics
 	//had to put it on differenr server for standard code
 	go func() {

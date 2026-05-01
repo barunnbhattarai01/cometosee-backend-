@@ -130,8 +130,8 @@ func InitiateHandler(w http.ResponseWriter, r *http.Request) {
 		ProductCode:           "EPAYTEST", // eSewa sandbox merchant code
 		TotalAmount:           "100",
 		TransactionUUID:       uuid.New().String(),
-		SuccessURL:            "http://localhost:8080/esewa/verify",
-		FailureURL:            "http://localhost:8080/esewa/failure",
+		SuccessURL:            "http://localhost:8081/esewa/verify",
+		FailureURL:            "http://localhost:8081/esewa/failure",
 		SignedFieldNames:      "total_amount,transaction_uuid,product_code",
 	}
 
@@ -179,4 +179,8 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("payment verified ok"))
 
+}
+
+func FailureHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("payment failed"))
 }

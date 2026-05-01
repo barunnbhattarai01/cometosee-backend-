@@ -12,8 +12,8 @@ const (
 
 type Connection struct {
 	ID          string
-	UserLow     string
-	UserHigh    string
+	UserId1     string
+	UserId2     string
 	RequestedBy string
 	Status      ConnectionStatus
 	CreatedAt   time.Time

@@ -17,23 +17,22 @@ func NewConnectionRepo() ConnectionRepository {
 	return &ConnectionRepo{}
 }
 
-func (r *ConnectionRepo) GetConnection(userLow, userHigh string) (*model.Connection, error) {
+func (r *ConnectionRepo) GetConnection(userId1, userId2 string) (*model.Connection, error) {
 
 	query := `
-	SELECT id, user_low, user_high, requested_by, status, created_at, updated_at
-	FROM connections
-	WHERE user_low = $1 AND user_high = $2
-	LIMIT 1;
-	`
-
-	row := intailizer.DB.QueryRow(query, userLow, userHigh)
+SELECT id, user_id_1, user_id_2, requested_by, status, created_at,updated_at
+FROM connectionstable
+WHERE user_id_1 = $1 AND user_id_2 = $2
+LIMIT 1;
+`
+	row := intailizer.DB.QueryRow(query, userId1, userId2)
 
 	var conn model.Connection
 
 	err := row.Scan(
 		&conn.ID,
-		&conn.UserLow,
-		&conn.UserHigh,
+		&conn.UserId1,
+		&conn.UserId2,
 		&conn.RequestedBy,
 		&conn.Status,
 		&conn.CreatedAt,
@@ -49,19 +48,20 @@ func (r *ConnectionRepo) GetConnection(userLow, userHigh string) (*model.Connect
 
 func (r *ConnectionRepo) CreateConnection(conn model.Connection) error {
 	query := `
-		INSERT INTO connections (user_low, user_high, requested_by, status)
-		VALUES ($1, $2, $3, $4)
-	`
-	_, err := intailizer.DB.Exec(query, conn.UserLow, conn.UserHigh, conn.RequestedBy, conn.Status)
+INSERT INTO connectionstable (user_id_1, user_id_2, requested_by, status)
+VALUES ($1, $2, $3, $4)
+`
+	_, err := intailizer.DB.Exec(query, conn.UserId1, conn.UserId2, conn.RequestedBy, conn.Status)
 	return err
 }
 
-func (r *ConnectionRepo) UpdateStatus(userLow, userHigh string, status model.ConnectionStatus) error {
+func (r *ConnectionRepo) UpdateStatus(userId1, userId2 string, status model.ConnectionStatus) error {
 	query := `
-		UPDATE connections
-		SET status = $1
-		WHERE user_low = $2 AND user_high = $3
-	`
-	_, err := intailizer.DB.Exec(query, status, userLow, userHigh)
+UPDATE connectionstable
+SET status = $1,
+    updated_at = NOW()
+WHERE user_id_1 = $2 AND user_id_2 = $3
+`
+	_, err := intailizer.DB.Exec(query, status, userId1, userId2)
 	return err
 }

@@ -74,19 +74,20 @@ id serial primary key,
 		log.Fatalf("error in creating payment table :%v", err)
 	}
 
-	connectiontable := `CREATE TABLE connections (
+	connectiontable := `CREATE TABLE if not exists connectionstable(
     id BIGSERIAL PRIMARY KEY,
-    user_id_1 UUID NOT NULL,
-    user_id_2 UUID NOT NULL,
+    user_id_1 text NOT NULL,
+    user_id_2 text NOT NULL,
     status TEXT NOT NULL,
-    requested_by UUID NOT NULL,
+    requested_by text NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
+	updated_at TIMESTAMP DEFAULT NOW(),
 
     CHECK (user_id_1 < user_id_2)
 );
 
-CREATE UNIQUE INDEX unique_pair
-ON connections(user_id_1, user_id_2);`
+CREATE UNIQUE INDEX if not exists unique_pair
+ON connectionstable(user_id_1, user_id_2);`
 
 	_, err = DB.Exec(connectiontable)
 
