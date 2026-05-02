@@ -21,6 +21,7 @@ type AuthService interface {
 	Login(email, password string) (string, string, error)
 	ForgetPassword(email string) error
 	ResetPassword(email, otp, newPassword string) error
+	GetProfile(email string) (model.Auth, error)
 }
 
 type authService struct {
@@ -166,4 +167,16 @@ func (s *authService) ResetPassword(email, otp, newPassword string) error {
 	}
 
 	return nil
+}
+
+func (s *authService) GetProfile(email string) (model.Auth, error) {
+	email = strings.ToLower(email)
+
+	user, err := s.repo.GetUserByEmail(email)
+	if err != nil {
+		return model.Auth{}, errors.New("user not found")
+	}
+
+	user.Password = "" 
+	return *user, nil
 }

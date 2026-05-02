@@ -119,3 +119,23 @@ func (c *AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		"message": "sucessfully change the password",
 	})
 }
+
+func (c *AuthController) Getprofile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	email, ok := r.Context().Value("email").(string)
+	if !ok {
+		common.WriteJSONError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := c.service.GetProfile(email)
+	if err != nil {
+		common.WriteJSONError(w, "error fetching profile", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "profile fetched sucessfully",
+		"profile": user,
+	})
+
+}

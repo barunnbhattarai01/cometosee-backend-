@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -44,7 +45,24 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		next(w, r)
+		//  extract claims
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, `{"message":"invalid token claims"}`, http.StatusUnauthorized)
+			return
+		}
+
+		//  get email from claims
+		email, ok := claims["email"].(string)
+		if !ok {
+			http.Error(w, `{"message":"email not found in token"}`, http.StatusUnauthorized)
+			return
+		}
+
+		// add email to context
+		ctx := context.WithValue(r.Context(), "email", email)
+
+		next(w, r.WithContext(ctx))
 
 	}
 }
