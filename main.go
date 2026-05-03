@@ -76,6 +76,7 @@ func main() {
 	subcriptiondi := di.SubcribntionDi()
 	webrtcdi := di.SetupWebRTC()
 	connectiondi := di.SetupConnectionController()
+	agoradi, _ := di.SetupAgoraDI()
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
 	routes.PostRoutes(gor, postcontroller)
@@ -84,6 +85,7 @@ func main() {
 	routes.ConnectionRoutes(gor, connectiondi)
 	routes.WEbrtcroutes(gor, webrtcdi)
 	routes.SubcribtionRoute(gor, subcriptiondi)
+	routes.SetupAgoraRoutes(gor, agoradi)
 	gor.HandleFunc("/esewa/initiate", controller.InitiateHandler).Methods("POST")
 	gor.HandleFunc("/esewa/verify", controller.VerifyHandler).Methods("GET")
 	gor.HandleFunc("/esewa/failure", controller.FailureHandler).Methods("GET")

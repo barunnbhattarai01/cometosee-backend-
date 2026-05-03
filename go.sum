@@ -26,6 +26,8 @@ firebase.google.com/go v3.13.0+incompatible h1:3TdYC3DDi6aHn20qoRkxwGqNgdjtblwVA
 firebase.google.com/go v3.13.0+incompatible/go.mod h1:xlah6XbEyW6tbfSklcfe5FHJIwjt8toICdV5Wh9ptHs=
 firebase.google.com/go/v4 v4.18.0 h1:S+g0P72oDGqOaG4wlLErX3zQmU9plVdu7j+Bc3R1qFw=
 firebase.google.com/go/v4 v4.18.0/go.mod h1:P7UfBpzc8+Z3MckX79+zsWzKVfpGryr6HLbAe7gCWfs=
+github.com/AgoraIO-Community/go-tokenbuilder v1.4.0 h1:2zwmhpoAtqVZnZeNxltU0DBXqOtyDniGT4LBTbZETBg=
+github.com/AgoraIO-Community/go-tokenbuilder v1.4.0/go.mod h1:xqPdaiFG00M1hNN/CCYh8j+NTmkiJsQtqYdf4YAlncA=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0 h1:sBEjpZlNHzK1voKq9695PJSX2o5NEXl7/OL3coiIY0c=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0/go.mod h1:P4WPRUkOhJC13W//jWpyfJNDAIpvRbAUIYLX/4jtlE0=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0 h1:fYE9p3esPxA/C0rQ0AHhP0drtPXDRhaWiwg1DPqO7IU=
