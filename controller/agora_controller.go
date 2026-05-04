@@ -14,11 +14,23 @@ func NewAgoraController(s *service.VideoCallService) *AgoraController {
 	return &AgoraController{service: s}
 }
 
-func (c *AgoraController) CreateCall(w http.ResponseWriter, r *http.Request) {
-	userID := int64(1)       // from context
-	connectionID := int64(1) // from context
+type req struct {
+	SessionID    int64 `json:"session_id"`
+	UserID       int64 `json:"user_id"`
+	ConnectionID int64 `json:"connection_id"`
+}
 
-	session, token, err := c.service.Create(connectionID, userID)
+func (c *AgoraController) CreateCall(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var request req
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	session, token, err := c.service.Create(request.ConnectionID, request.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -31,11 +43,15 @@ func (c *AgoraController) CreateCall(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AgoraController) StartCall(w http.ResponseWriter, r *http.Request) {
-	sessionID := int64(1)
-	userID := int64(2)
-	connectionID := int64(1)
+	w.Header().Set("Content-Type", "application/json")
 
-	session, token, err := c.service.Start(sessionID, userID, connectionID)
+	var request req
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	session, token, err := c.service.Start(request.SessionID, request.UserID, request.ConnectionID)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
@@ -48,10 +64,13 @@ func (c *AgoraController) StartCall(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AgoraController) EndCall(w http.ResponseWriter, r *http.Request) {
-	sessionID := int64(1)
-	connectionID := int64(1)
+	var request req
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
 
-	session, err := c.service.End(sessionID, connectionID)
+	session, err := c.service.End(request.SessionID, request.ConnectionID)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return

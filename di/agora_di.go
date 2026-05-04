@@ -2,6 +2,7 @@ package di
 
 import (
 	"cometosee/controller"
+	"cometosee/features"
 	"cometosee/repository"
 	"cometosee/service"
 	"os"
@@ -9,7 +10,7 @@ import (
 
 func SetupAgoraDI() (*controller.AgoraController, error) {
 	//agora token
-	agoraid := service.NewAgoraService(
+	agoraid := features.NewAgoraService(
 		os.Getenv("Agora_APP_ID"),
 		os.Getenv("Agora_APP_CERTIFICATE"),
 	)

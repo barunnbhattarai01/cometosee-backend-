@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cometosee/features"
 	"cometosee/model"
 	"cometosee/repository"
 	"fmt"
@@ -9,10 +10,10 @@ import (
 
 type VideoCallService struct {
 	repo  repository.VideoCallRepository
-	agora AgoraService
+	agora features.AgoraService
 }
 
-func NewVideoCallService(r repository.VideoCallRepository, a AgoraService) *VideoCallService {
+func NewVideoCallService(r repository.VideoCallRepository, a features.AgoraService) *VideoCallService {
 	return &VideoCallService{repo: r, agora: a}
 }
 
