@@ -9,6 +9,7 @@ type ConnectionRepository interface {
 	GetConnection(userLow, userHigh string) (*model.Connection, error)
 	CreateConnection(conn model.Connection) error
 	UpdateStatus(userLow, userHigh string, status model.ConnectionStatus) error
+	GetUserConnections(user string) ([]model.Connection, error)
 }
 
 type ConnectionRepo struct{}
@@ -64,4 +65,40 @@ WHERE user_id_1 = $2 AND user_id_2 = $3
 `
 	_, err := intailizer.DB.Exec(query, status, userId1, userId2)
 	return err
+}
+
+func (r *ConnectionRepo) GetUserConnections(user string) ([]model.Connection, error) {
+	query := `
+SELECT id, user_id_1, user_id_2, requested_by, status, created_at, updated_at
+FROM connectionstable
+WHERE user_id_1 = $1 OR user_id_2 = $1
+`
+
+	rows, err := intailizer.DB.Query(query, user)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var connections []model.Connection
+
+	for rows.Next() {
+		var conn model.Connection
+		err := rows.Scan(
+			&conn.ID,
+			&conn.UserId1,
+			&conn.UserId2,
+			&conn.RequestedBy,
+			&conn.Status,
+			&conn.CreatedAt,
+			&conn.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		connections = append(connections, conn)
+	}
+
+	return connections, nil
 }

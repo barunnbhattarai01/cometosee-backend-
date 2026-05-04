@@ -95,7 +95,7 @@ ON connectionstable(user_id_1, user_id_2);`
 		log.Fatalf("error in creating connection table :%v", err)
 	}
 
-	videocalltable := `CREATE TABLE video_call_sessions (
+	videocalltable := `CREATE TABLE if not exists video_call_sessions (
     id BIGSERIAL PRIMARY KEY,
     connection_id BIGINT NOT NULL,
     initiated_by_user_id BIGINT NOT NULL,

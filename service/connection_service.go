@@ -11,6 +11,8 @@ type ConnectionService interface {
 	AcceptRequest(user1, user2 string) error
 	BlockUser(user1, user2 string) error
 	GetConnection(user1, user2 string) (*model.Connection, error)
+	GetReceivedRequests(user string) ([]model.Connection, error)
+	GetSentRequests(user string) ([]model.Connection, error)
 }
 
 type connectionService struct {
@@ -83,4 +85,40 @@ func (s *connectionService) BlockUser(user1, user2 string) error {
 func (s *connectionService) GetConnection(user1, user2 string) (*model.Connection, error) {
 	userId1, userId2 := normalizeUsers(user1, user2)
 	return s.repo.GetConnection(userId1, userId2)
+}
+
+func (s *connectionService) GetReceivedRequests(user string) ([]model.Connection, error) {
+	conns, err := s.repo.GetUserConnections(user)
+	if err != nil {
+		return nil, err
+	}
+
+	var received []model.Connection
+
+	for _, c := range conns {
+		// someone else sent request to me
+		if c.Status == model.Pending && c.RequestedBy != user {
+			received = append(received, c)
+		}
+	}
+
+	return received, nil
+}
+
+func (s *connectionService) GetSentRequests(user string) ([]model.Connection, error) {
+	conns, err := s.repo.GetUserConnections(user)
+	if err != nil {
+		return nil, err
+	}
+
+	var sent []model.Connection
+
+	for _, c := range conns {
+		// I sent request to someone else
+		if c.Status == model.Pending && c.RequestedBy == user {
+			sent = append(sent, c)
+		}
+	}
+
+	return sent, nil
 }

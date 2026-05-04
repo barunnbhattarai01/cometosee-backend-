@@ -3,6 +3,8 @@ package controller
 import (
 	"cometosee/common"
 	"cometosee/service"
+	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -108,4 +110,60 @@ func (cc *ConnectionController) GetConnection(w http.ResponseWriter, r *http.Req
 	}
 
 	common.WriteJSONMessage(w, "connection found")
+}
+
+func (c *ConnectionController) GetReceivedRequests(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, `{"message":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	email := common.GetEmail(r.Context())
+	fmt.Print(email)
+
+	if email == "" {
+		http.Error(w, `{"message":"unauthorized user"}`, http.StatusUnauthorized)
+		return
+	}
+
+	data, err := c.service.GetReceivedRequests(email)
+	if err != nil {
+		http.Error(w, `{"message":"failed to fetch data"}`, http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "received requests fetched successfully",
+		"data":    data,
+	})
+}
+
+func (c *ConnectionController) GetSentRequests(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, `{"message":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	email := common.GetEmail(r.Context())
+	fmt.Print(email)
+
+	if email == "" {
+		http.Error(w, `{"message":"unauthorized user"}`, http.StatusUnauthorized)
+		return
+	}
+
+	data, err := c.service.GetSentRequests(email)
+	if err != nil {
+		http.Error(w, `{"message":"failed to fetch data"}`, http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "sent requests fetched successfully",
+		"data":    data,
+	})
 }

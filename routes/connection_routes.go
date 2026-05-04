@@ -2,6 +2,7 @@ package routes
 
 import (
 	"cometosee/controller"
+	"cometosee/middleware"
 
 	"github.com/gorilla/mux"
 )
@@ -11,5 +12,7 @@ func ConnectionRoutes(gor *mux.Router, connectionController *controller.Connecti
 	gor.HandleFunc("/connection/accept", connectionController.AcceptRequest).Methods("POST")
 	gor.HandleFunc("/connection/block", connectionController.BlockUser).Methods("POST")
 	gor.HandleFunc("/connection/get", connectionController.GetConnection).Methods("GET")
+	gor.HandleFunc("/connection/received", middleware.JwtMiddlware(connectionController.GetReceivedRequests)).Methods("GET")
+	gor.HandleFunc("/connection/sended", middleware.JwtMiddlware(connectionController.GetSentRequests)).Methods("GET")
 
 }
