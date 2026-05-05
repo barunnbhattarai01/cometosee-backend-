@@ -6,9 +6,12 @@ import (
 )
 
 func Syncdatabase() {
+
 	authtable := `
  create table if not exists cometoseeauth(
- email text primary key,
+ auth_id serial primary key,
+ email text unique not null,
+ username text not null,
  password text not null
  )  
    `
@@ -18,16 +21,6 @@ func Syncdatabase() {
 	if err != nil {
 		log.Fatalf("errror in creating auth table %v", err)
 	}
-
-	//alter the username
-	// alter := `alter table cometoseeauth
-	// add column username text not null`
-
-	// _, err = DB.Exec(alter)
-
-	// if err != nil {
-	// 	log.Printf("errror altering table")
-	// }
 
 	messgingtable := `
 	create table if not exists messagetable(
@@ -112,6 +105,42 @@ ON connectionstable(user_id_1, user_id_2);`
 
 	if err != nil {
 		log.Fatalf("error in creating video call session table :%v", err)
+	}
+
+	//userdetail
+	userdetailtable := `CREATE TABLE if not exists userdetailinfo (
+	user_detail_id SERIAL PRIMARY KEY,
+	auth_id INT NOT NULL,
+calling_name TEXT NOT NULL,
+sport TEXT NOT NULL,
+skill TEXT NOT NULL,
+avatar TEXT,
+bio TEXT,
+created_at TIMESTAMP DEFAULT NOW(),
+FOREIGN KEY (auth_id) REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE
+);`
+
+	_, err = DB.Exec(userdetailtable)
+
+	if err != nil {
+		log.Fatalf("error in creating user detail info table :%v", err)
+	}
+
+	//location
+	locationtable := `CREATE TABLE if not exists location (
+	id SERIAL PRIMARY KEY,
+	user_detail_id INT NOT NULL,
+country TEXT NOT NULL,
+city TEXT NOT NULL,
+latitude DOUBLE PRECISION NOT NULL,
+longitude DOUBLE PRECISION NOT NULL,
+FOREIGN KEY (user_detail_id) REFERENCES userdetailinfo(user_detail_id) ON DELETE CASCADE
+);`
+
+	_, err = DB.Exec(locationtable)
+
+	if err != nil {
+		log.Fatalf("error in creating location table :%v", err)
 	}
 
 	fmt.Print("table ready")

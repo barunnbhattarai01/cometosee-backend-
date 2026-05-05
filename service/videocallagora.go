@@ -47,6 +47,11 @@ func (s *VideoCallService) Start(sessionID, userID, connectionID int64) (*model.
 		return nil, "", err
 	}
 
+	//fmt.Println("InitiatedBy:", session.InitiatedByUserID)
+	//fmt.Println("UserID:", userID)
+	//fmt.Println("ConnectionID:", connectionID)
+	//fmt.Println("SessionConnection:", session.ConnectionID)
+
 	if session.ConnectionID != connectionID {
 		return nil, "", fmt.Errorf("forbidden")
 	}

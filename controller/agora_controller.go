@@ -53,6 +53,7 @@ func (c *AgoraController) StartCall(w http.ResponseWriter, r *http.Request) {
 
 	session, token, err := c.service.Start(request.SessionID, request.UserID, request.ConnectionID)
 	if err != nil {
+		//fmt.Print("errorror hererere")
 		http.Error(w, err.Error(), 400)
 		return
 	}

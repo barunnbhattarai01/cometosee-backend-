@@ -13,7 +13,7 @@ func NewUserFilterRepository() UserFilterRepository {
 }
 
 func (r *userFilterRepo) FilterUsersByName() ([]string, error) {
-	query := `SELECT username FROM cometoseeauth`
+	query := `SELECT email FROM cometoseeauth`
 	rows, err := intailizer.DB.Query(query)
 	if err != nil {
 		return nil, err
