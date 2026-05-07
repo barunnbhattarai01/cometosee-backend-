@@ -13,6 +13,8 @@ type ConnectionService interface {
 	GetConnection(user1, user2 string) (*model.Connection, error)
 	GetReceivedRequests(user string) ([]model.Connection, error)
 	GetSentRequests(user string) ([]model.Connection, error)
+	UnsendRequest(user1, user2 string) error
+	UserFilteraftersentandblock(user1, user2 string) (bool, error)
 }
 
 type connectionService struct {
@@ -121,4 +123,32 @@ func (s *connectionService) GetSentRequests(user string) ([]model.Connection, er
 	}
 
 	return sent, nil
+}
+
+func (s *connectionService) UnsendRequest(user1, user2 string) error {
+	userId1, userId2 := normalizeUsers(user1, user2)
+	conn, err := s.repo.GetConnection(userId1, userId2)
+	if err != nil {
+		return err
+	}
+
+	if conn.Status != model.Pending {
+		return errors.New("only pending requests can be unsent")
+	}
+
+	return s.repo.UnsendConnection(userId1, userId2)
+}
+
+func (s *connectionService) UserFilteraftersentandblock(user1, user2 string) (bool, error) {
+	userId1, userId2 := normalizeUsers(user1, user2)
+	conn, err := s.repo.GetConnection(userId1, userId2)
+	if err != nil {
+		return false, err
+	}
+
+	if conn.Status == model.Pending || conn.Status == model.Blocked {
+		return true, nil
+	}
+
+	return s.repo.Userfilteraftersentandblock(userId1, userId2)
 }

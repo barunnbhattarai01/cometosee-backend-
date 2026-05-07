@@ -167,3 +167,52 @@ func (c *ConnectionController) GetSentRequests(w http.ResponseWriter, r *http.Re
 		"data":    data,
 	})
 }
+
+func (c *ConnectionController) UnsendRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodPost {
+		http.Error(w, `{"message":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req connectionRequest
+	if err := common.ParseJSONBody(r, &req); err != nil {
+		http.Error(w, `{"message":"invalid json"}`, http.StatusBadRequest)
+		return
+	}
+
+	err := c.service.UnsendRequest(req.User1, req.User2)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"message":"%s"}`, err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "request unsent successfully",
+	})
+}
+
+func (c *ConnectionController) UserFilteraftersentandblock(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodPost {
+		http.Error(w, `{"message":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req connectionRequest
+	if err := common.ParseJSONBody(r, &req); err != nil {
+		http.Error(w, `{"message":"invalid json"}`, http.StatusBadRequest)
+		return
+	}
+	result, err := c.service.UserFilteraftersentandblock(req.User1, req.User2)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"message":"%s"}`, err.Error()), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "filter check completed",
+		"result":  result,
+	})
+}

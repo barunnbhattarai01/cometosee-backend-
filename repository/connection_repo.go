@@ -10,6 +10,8 @@ type ConnectionRepository interface {
 	CreateConnection(conn model.Connection) error
 	UpdateStatus(userLow, userHigh string, status model.ConnectionStatus) error
 	GetUserConnections(user string) ([]model.Connection, error)
+	UnsendConnection(userLow, userHigh string) error
+	Userfilteraftersentandblock(user1, user2 string) (bool, error)
 }
 
 type ConnectionRepo struct{}
@@ -101,4 +103,29 @@ WHERE user_id_1 = $1 OR user_id_2 = $1
 	}
 
 	return connections, nil
+}
+
+func (r *ConnectionRepo) UnsendConnection(userId1, userId2 string) error {
+	query := `
+DELETE FROM connectionstable
+WHERE user_id_1 = $1 AND user_id_2 = $2
+`
+	_, err := intailizer.DB.Exec(query, userId1, userId2)
+	return err
+}
+
+func (r *ConnectionRepo) Userfilteraftersentandblock(user1, user2 string) (bool, error) {
+	query := `
+SELECT COUNT(*)
+FROM connectionstable
+WHERE (user_id_1 = $1 AND user_id_2 = $2) OR (user_id_1 = $2 AND user_id_2 = $1)
+AND status IN ('pending', 'blocked')
+`
+	row := intailizer.DB.QueryRow(query, user1, user2)
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
