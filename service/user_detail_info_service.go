@@ -9,6 +9,7 @@ import (
 type UserDetailInfoService interface {
 	TakeUserDetailInfo(user *model.UserDetailInfo) (string, error)
 	TakeUserLocation(user *model.Location) (string, error)
+	IsProfileCompleted(auth_id int) (bool, error)
 }
 
 type userDetailInfoService struct {
@@ -34,4 +35,8 @@ func (s *userDetailInfoService) TakeUserLocation(user *model.Location) (string, 
 		return "", errors.New("All fields are required")
 	}
 	return s.repo.TakeUserLocation(user)
+}
+
+func (s *userDetailInfoService) IsProfileCompleted(authId int) (bool, error) {
+	return s.repo.IsProfileExists(authId)
 }

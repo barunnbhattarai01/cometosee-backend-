@@ -59,8 +59,18 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		//get auth_id from claims
+		authId, ok := claims["authId"].(float64)
+		if !ok {
+			http.Error(w, "authid not found ", http.StatusUnauthorized)
+			return
+		}
+
 		// add email to context
 		ctx := context.WithValue(r.Context(), "email", email)
+
+		//add authid to context
+		ctx = context.WithValue(r.Context(), "authId", authId)
 
 		next(w, r.WithContext(ctx))
 

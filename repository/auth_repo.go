@@ -23,10 +23,11 @@ func (r *authrepo) CreateUser(user model.Auth) error {
 }
 
 func (r *authrepo) GetUserByEmail(email string) (*model.Auth, error) {
+
 	var user model.Auth
 	err := intailizer.DB.QueryRow(
-		`SELECT username,password,email FROM cometoseeauth WHERE email=$1`, email,
-	).Scan(&user.Username, &user.Password, &user.Email)
+		`SELECT auth_id ,username,password,email FROM cometoseeauth WHERE email=$1`, email,
+	).Scan(&user.Auth_id, &user.Username, &user.Password, &user.Email)
 	if err != nil {
 		return nil, err
 	}

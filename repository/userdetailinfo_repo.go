@@ -8,6 +8,7 @@ import (
 type UserDetailInfo interface {
 	TakeUserDetailInfo(user *model.UserDetailInfo) (string, error)
 	TakeUserLocation(user *model.Location) (string, error)
+	IsProfileExists(auth_id int) (bool, error)
 }
 
 type userDetailInfoRepo struct{}
@@ -29,11 +30,49 @@ func (r *userDetailInfoRepo) TakeUserDetailInfo(user *model.UserDetailInfo) (str
 
 func (r *userDetailInfoRepo) TakeUserLocation(user *model.Location) (string, error) {
 
-	query := `insert into location(user_detail_id, country, city, latitude, longitude) values($1, $2, $3, $4, $5)`
-	_, err := intailizer.DB.Exec(query, user.User_Detail_Id, user.Country, user.City, user.Latitude, user.Longitude)
+	query := `
+	INSERT INTO location(
+		user_detail_id,
+		country,
+		city,
+		latitude,
+		longitude,
+		geom
+	)
+	VALUES(
+		$1, $2, $3, $4, $5,
+		ST_SetSRID(ST_MakePoint($5, $4), 4326)::geography
+	)
+	`
+
+	_, err := intailizer.DB.Exec(
+		query,
+		user.User_Detail_Id,
+		user.Country,
+		user.City,
+		user.Latitude,
+		user.Longitude,
+	)
+
 	if err != nil {
 		return "", err
 	}
 
-	return "User Location Information insert sucessfully", nil
+	return "User Location Information inserted successfully", nil
+}
+
+func (r *userDetailInfoRepo) IsProfileExists(authId int) (bool, error) {
+
+	query := `SELECT EXISTS (
+		SELECT 1 FROM userdetailinfo WHERE auth_id = $1
+	)`
+
+	var exists bool
+
+	err := intailizer.DB.QueryRow(query, authId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

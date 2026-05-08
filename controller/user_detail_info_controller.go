@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"cometosee/common"
 	"cometosee/model"
 	"cometosee/service"
 	"encoding/json"
@@ -63,5 +64,20 @@ func (c *UserDetailInfoController) TakeUserLocation(w http.ResponseWriter, r *ht
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": user,
+	})
+}
+
+func (c *UserDetailInfoController) ProfileStatus(w http.ResponseWriter, r *http.Request) {
+
+	authid := common.GetAuthid(r.Context())
+
+	exists, err := c.service.IsProfileCompleted(int(authid))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"profile_completed": exists,
 	})
 }

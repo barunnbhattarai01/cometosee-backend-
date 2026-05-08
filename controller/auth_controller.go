@@ -69,7 +69,7 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 
 	token, username, err := c.service.Login(body.Email, body.Password)
 	if err != nil {
-		common.WriteJSONError(w, "login failed", http.StatusBadRequest)
+		common.WriteJSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]string{

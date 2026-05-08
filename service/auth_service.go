@@ -45,15 +45,17 @@ func (s *authService) Signup(user model.Auth) error {
 
 func (s *authService) Login(email, password string) (string, string, error) {
 	email = strings.ToLower(email)
+
 	user, err := s.repo.GetUserByEmail(email)
 	if err != nil {
 		return "", "", err
 	}
+
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", errors.New("invalid password")
 	}
 
-	token, err := geneareJwt(user.Email, user.Username)
+	token, err := geneareJwt(user.Auth_id, user.Email, user.Username)
 	if err != nil {
 		return "", "", err
 	}
@@ -61,8 +63,9 @@ func (s *authService) Login(email, password string) (string, string, error) {
 
 }
 
-func geneareJwt(email string, username string) (string, error) {
+func geneareJwt(authid int, email string, username string) (string, error) {
 	claims := jwt.MapClaims{
+		"authId":   authid,
 		"email":    email,
 		"username": username,
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),
@@ -177,6 +180,6 @@ func (s *authService) GetProfile(email string) (model.Auth, error) {
 		return model.Auth{}, errors.New("user not found")
 	}
 
-	user.Password = "" 
+	user.Password = ""
 	return *user, nil
 }
