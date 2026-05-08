@@ -65,7 +65,7 @@ func (s *authService) Login(email, password string) (string, string, error) {
 
 func geneareJwt(authid int, email string, username string) (string, error) {
 	claims := jwt.MapClaims{
-		"authId":   authid,
+		"authId":   float64(authid),
 		"email":    email,
 		"username": username,
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),

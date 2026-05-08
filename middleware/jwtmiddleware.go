@@ -61,6 +61,7 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 
 		//get auth_id from claims
 		authId, ok := claims["authId"].(float64)
+
 		if !ok {
 			http.Error(w, "authid not found ", http.StatusUnauthorized)
 			return
