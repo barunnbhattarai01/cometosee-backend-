@@ -8,8 +8,14 @@ import (
 // we need to track a intereset and location table so we need auth_id as foreign key to link it to the user table
 // and we need to track a location of user so we need a user_id as foreign key to link it to the user table
 type InterestAndLocationDiscoveryRepository interface {
-	DiscoverInterests(auth_id int, user_detail_id int) ([]model.UserDetailInfo, error)
-	DiscoverLocations(auth_id int, user_detail_id int) ([]model.Location, error)
+	FindNearbyUsers(
+		lat float64,
+		lon float64,
+		radius int,
+		sport string,
+		skill string,
+		currentUserId int,
+	) ([]model.UserDetailInfo, error)
 }
 
 type interestAndLocationDiscoveryRepository struct{}
@@ -18,47 +24,63 @@ func NewInterestAndLocationDiscoveryRepository() InterestAndLocationDiscoveryRep
 	return &interestAndLocationDiscoveryRepository{}
 }
 
-func (r *interestAndLocationDiscoveryRepository) DiscoverInterests(auth_id int, user_detail_id int) ([]model.UserDetailInfo, error) {
+func (r *interestAndLocationDiscoveryRepository) FindNearbyUsers(
+	lat float64,
+	lon float64,
+	radius int,
+	sport string,
+	skill string,
+	currentUserId int,
+) ([]model.UserDetailInfo, error) {
 
-	query := `SELECT * FROM user_interests WHERE auth_id = $1 AND user_detail_id = $2`
+	query := `
+	SELECT u.user_detail_id, u.auth_id, u.calling_name, u.sport, u.skill,u.bio,u.avatar,u.created_at
+FROM location l
+JOIN userdetailinfo u 
+  ON l.user_detail_id = u.user_detail_id
+WHERE l.geom IS NOT NULL
+AND ST_DWithin(
+  l.geom,
+  ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+  $3::double precision
+)
+AND u.user_detail_id != $4
+AND LOWER(u.sport) = LOWER($5)
+AND LOWER(u.skill) = LOWER($6)
+ORDER BY ST_Distance(
+  l.geom,
+  ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+)
+LIMIT 20;
+	`
 
-	rows, err := intailizer.DB.Query(query, auth_id, user_detail_id)
+	rows, err := intailizer.DB.Query(query, lon, lat, radius, currentUserId, sport, skill)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var userinterest []model.UserDetailInfo
+
+	var users []model.UserDetailInfo
+
 	for rows.Next() {
-		var interest model.UserDetailInfo
-		if err := rows.Scan(&interest.AuthId, &interest.User_Detail_Id, &interest.Sport, &interest.Skill); err != nil {
+		var u model.UserDetailInfo
+		err := rows.Scan(
+			&u.User_Detail_Id,
+			&u.AuthId,
+			&u.Calling_name,
+			&u.Sport,
+			&u.Skill,
+			&u.Bio,
+			&u.Avatar,
+			&u.Created_at,
+		)
+		if err != nil {
 			return nil, err
 		}
-		userinterest = append(userinterest, interest)
+		users = append(users, u)
 	}
 
-	return userinterest, nil
-}
-
-func (r *interestAndLocationDiscoveryRepository) DiscoverLocations(auth_id int, user_detail_id int) ([]model.Location, error) {
-
-	query := `SELECT * FROM user_locations WHERE auth_id = $1 AND user_detail_id = $2`
-
-	rows, err := intailizer.DB.Query(query, auth_id, user_detail_id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var userlocation []model.Location
-	for rows.Next() {
-		var location model.Location
-		if err := rows.Scan(&location.User_Detail_Id, &location.City, &location.Country); err != nil {
-			return nil, err
-		}
-		userlocation = append(userlocation, location)
-	}
-
-	return userlocation, nil
-
+	return users, nil
 }
 
 //what we need to do is simpple awhh it not simple not let say it it simple

@@ -78,6 +78,7 @@ func main() {
 	connectiondi := di.SetupConnectionController()
 	agoradi, _ := di.SetupAgoraDI()
 	userdetailinfodi := di.InitializeUserDetailInfo()
+	discoverydi := di.Setupdiscoveryfeed()
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
 	routes.PostRoutes(gor, postcontroller)
@@ -88,6 +89,7 @@ func main() {
 	routes.SubcribtionRoute(gor, subcriptiondi)
 	routes.SetupAgoraRoutes(gor, agoradi)
 	routes.InitializeUserDetailInfoRoutes(gor, userdetailinfodi)
+	routes.Discoveryroutes(gor, discoverydi)
 	gor.HandleFunc("/esewa/initiate", controller.InitiateHandler).Methods("POST")
 	gor.HandleFunc("/esewa/verify", controller.VerifyHandler).Methods("GET")
 	gor.HandleFunc("/esewa/failure", controller.FailureHandler).Methods("GET")

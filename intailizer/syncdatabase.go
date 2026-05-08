@@ -7,6 +7,12 @@ import (
 
 func Syncdatabase() {
 
+	//extension for psotgis
+	_, err := DB.Exec(`CREATE EXTENSION IF NOT EXISTS postgis;`)
+	if err != nil {
+		log.Fatalf("error enabling postgis: %v", err)
+	}
+
 	authtable := `
  create table if not exists cometoseeauth(
  auth_id serial primary key,
@@ -16,7 +22,7 @@ func Syncdatabase() {
  )  
    `
 
-	_, err := DB.Exec(authtable)
+	_, err = DB.Exec(authtable)
 
 	if err != nil {
 		log.Fatalf("errror in creating auth table %v", err)
@@ -141,6 +147,49 @@ FOREIGN KEY (user_detail_id) REFERENCES userdetailinfo(user_detail_id) ON DELETE
 
 	if err != nil {
 		log.Fatalf("error in creating location table :%v", err)
+	}
+
+	_, err = DB.Exec(`
+ALTER TABLE location
+ADD COLUMN IF NOT EXISTS geom geography(Point, 4326);
+`)
+	if err != nil {
+		log.Fatalf("error adding geom column: %v", err)
+	}
+
+	//creating index to make searcg more fast
+	_, err = DB.Exec(`
+CREATE INDEX IF NOT EXISTS idx_location_geom
+ON location
+USING GIST (geom);
+`)
+	if err != nil {
+		log.Fatalf("error creating geom index: %v", err)
+	}
+
+	_, err = DB.Exec(`
+CREATE OR REPLACE FUNCTION update_geom_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.geom = ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::geography;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+`)
+	if err != nil {
+		log.Fatalf("error creating trigger function: %v", err)
+	}
+
+	_, err = DB.Exec(`
+DROP TRIGGER IF EXISTS set_geom ON location;
+
+CREATE TRIGGER set_geom
+BEFORE INSERT OR UPDATE ON location
+FOR EACH ROW
+EXECUTE FUNCTION update_geom_column();
+`)
+	if err != nil {
+		log.Fatalf("error creating trigger: %v", err)
 	}
 
 	fmt.Print("table ready")
