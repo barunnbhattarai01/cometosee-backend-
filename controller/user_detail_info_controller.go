@@ -47,14 +47,25 @@ func (c *UserDetailInfoController) TakeUserDetailInfo(w http.ResponseWriter, r *
 
 func (c *UserDetailInfoController) TakeUserLocation(w http.ResponseWriter, r *http.Request) {
 
+	authId := common.GetAuthid(r.Context())
+
+	userdetailId, err := c.service.GetUserDetailIDByAuthID(int(authId))
+	if err != nil {
+		common.WriteJSONError(w, "error in fetching user detail id", http.StatusInternalServerError)
+		return
+	}
+
 	var location model.Location
-	err := json.NewDecoder(r.Body).Decode(&location)
+
+	err = json.NewDecoder(r.Body).Decode(&location)
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"error": "Invalid request payload",
 		})
 		return
 	}
+
+	location.User_Detail_Id = userdetailId
 
 	user, err := c.service.TakeUserLocation(&location)
 	if err != nil {

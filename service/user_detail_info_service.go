@@ -10,6 +10,7 @@ type UserDetailInfoService interface {
 	TakeUserDetailInfo(user *model.UserDetailInfo) (string, error)
 	TakeUserLocation(user *model.Location) (string, error)
 	IsProfileCompleted(auth_id int) (bool, error)
+	GetUserDetailIDByAuthID(authID int) (int, error)
 }
 
 type userDetailInfoService struct {
@@ -27,7 +28,11 @@ func (s *userDetailInfoService) TakeUserDetailInfo(user *model.UserDetailInfo) (
 		return "", errors.New("All fields are required")
 	}
 
-	return s.repo.TakeUserDetailInfo(user)
+	repomessage, err := s.repo.TakeUserDetailInfo(user)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+	return repomessage, nil
 }
 
 func (s *userDetailInfoService) TakeUserLocation(user *model.Location) (string, error) {
@@ -39,4 +44,8 @@ func (s *userDetailInfoService) TakeUserLocation(user *model.Location) (string, 
 
 func (s *userDetailInfoService) IsProfileCompleted(authId int) (bool, error) {
 	return s.repo.IsProfileExists(authId)
+}
+
+func (s *userDetailInfoService) GetUserDetailIDByAuthID(authID int) (int, error) {
+	return s.repo.GetUserDetailIDByAuthID(authID)
 }

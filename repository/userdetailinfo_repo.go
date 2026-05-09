@@ -9,6 +9,7 @@ type UserDetailInfo interface {
 	TakeUserDetailInfo(user *model.UserDetailInfo) (string, error)
 	TakeUserLocation(user *model.Location) (string, error)
 	IsProfileExists(auth_id int) (bool, error)
+	GetUserDetailIDByAuthID(authID int) (int, error)
 }
 
 type userDetailInfoRepo struct{}
@@ -25,7 +26,7 @@ func (r *userDetailInfoRepo) TakeUserDetailInfo(user *model.UserDetailInfo) (str
 		return "", err
 	}
 
-	return "User Detail Information insert sucessfully", nil
+	return "sucessfully inserted", nil
 }
 
 func (r *userDetailInfoRepo) TakeUserLocation(user *model.Location) (string, error) {
@@ -75,4 +76,16 @@ func (r *userDetailInfoRepo) IsProfileExists(authId int) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+func (r *userDetailInfoRepo) GetUserDetailIDByAuthID(authID int) (int, error) {
+	query := `SELECT user_detail_id FROM userdetailinfo WHERE auth_id = $1`
+
+	var id int
+	err := intailizer.DB.QueryRow(query, authID).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
