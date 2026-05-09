@@ -71,7 +71,7 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), "email", email)
 
 		//add authid to context
-		ctx = context.WithValue(r.Context(), "authId", authId)
+		ctx = context.WithValue(ctx, "authId", authId)
 
 		next(w, r.WithContext(ctx))
 
