@@ -8,7 +8,7 @@ import (
 )
 
 func InitializeUserDetailInfoRoutes(gor *mux.Router, controller *controller.UserDetailInfoController) {
-	gor.HandleFunc("/userdetailinfo", controller.TakeUserDetailInfo).Methods("POST")
-	gor.HandleFunc("/userlocation", controller.TakeUserLocation).Methods("POST")
+	gor.HandleFunc("/userdetailinfo", middleware.JwtMiddlware(controller.TakeUserDetailInfo)).Methods("POST")
+	gor.HandleFunc("/userlocation", middleware.JwtMiddlware(controller.TakeUserLocation)).Methods("POST")
 	gor.HandleFunc("/profilestatus", middleware.JwtMiddlware(controller.ProfileStatus)).Methods("GET")
 }

@@ -28,6 +28,9 @@ func (c *UserDetailInfoController) TakeUserDetailInfo(w http.ResponseWriter, r *
 
 	}
 
+	authId := common.GetAuthid(r.Context())
+	userDetailInfo.AuthId = int(authId)
+
 	user, err := c.service.TakeUserDetailInfo(&userDetailInfo)
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{
