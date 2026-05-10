@@ -192,5 +192,44 @@ EXECUTE FUNCTION update_geom_column();
 		log.Fatalf("error creating trigger: %v", err)
 	}
 
+	//post
+	posttable := `create table if not exists post(
+   post_id serial primary key,
+     auth_id INT NOT NULL REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
+   caption text not null,
+   images_url text ,
+   created_at TIMESTAMP DEFAULT NOW()
+ );`
+
+	_, err = DB.Exec(posttable)
+	if err != nil {
+		log.Fatalf("error creating post:%v", err)
+	}
+
+	commenttable := `create table if not exists comments(
+	 comment_id serial primary key,
+	 auth_id int not null REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
+	 post_id int not null REFERENCES post(post_id) ON DELETE CASCADE,
+	 comment text not null,
+	 created_at TIMESTAMP DEFAULT NOW()
+	);`
+
+	_, err = DB.Exec(commenttable)
+	if err != nil {
+		log.Fatalf("error creating comment table:%v", err)
+	}
+
+	liketable := `create table if not exists post_likes(
+	 like_id serial primary key,
+	 auth_id int not null REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
+		 post_id int not null REFERENCES post(post_id) ON DELETE CASCADE,
+		 unique(post_id,auth_id)
+	);`
+
+	_, err = DB.Exec(liketable)
+	if err != nil {
+		log.Fatal("error in creating like table")
+	}
+
 	fmt.Print("table ready")
 }
