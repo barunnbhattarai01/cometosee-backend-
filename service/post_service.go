@@ -1,9 +1,9 @@
 package service
 
 import (
-	"cometosee/model"
 	"cometosee/repository"
 	"context"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -18,102 +18,73 @@ func NewPostService(repo *repository.PostRepository) *PostService {
 	}
 }
 
-func (s *PostService) UploadPost(caption, imageUrl, community, username string) (string, error) {
-	post := model.POSTDATA{
-		Caption:   caption,
-		ImageUrl:  imageUrl,
-		Community: community,
-		Username:  username,
-		Created:   time.Now(),
-	}
-	return s.repo.CreatePOST(post)
+func (s *PostService) UploadPost(authID int, caption, image string) (string, error) {
+	return s.repo.CreatePOST(authID, caption, image)
 }
 
-func (s *PostService) LikePost(postId, userId string) (bool, error) {
-	return s.repo.ToggleLike(postId, userId)
+func (s *PostService) LikePost(postId, authId string) (bool, error) {
+	return s.repo.ToggleLike(postId, authId)
 }
 
-func (s *PostService) AddComment(postId, userId, comment string) error {
-	return s.repo.Addcomment(postId, userId, comment)
+func (s *PostService) AddComment(postId, authId, comment string) error {
+	return s.repo.AddComment(postId, authId, comment)
 }
 
-func (s *PostService) FetchPost(ctx context.Context) ([]map[string]interface{}, error) {
+func (s *PostService) FetchFeed(
+	ctx context.Context,
+	lat float64,
+	lon float64,
+	radius int,
+	skill string,
+) ([]map[string]interface{}, error) {
+
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	//cacheKey := "fecthpost"
-
-	posts, err := s.repo.FetchPost(ctx)
-
-	//check cache firstt
-	//	if cacheData, found := config.GetCache(cacheKey); found {
-	//posts, ok := cacheData.([]map[string]interface{})
-	//if ok {
-	//		return posts, nil
-	//}
-	//	}
-
+	posts, err := s.repo.FetchFeed(ctx, lat, lon, radius, skill)
 	if err != nil {
 		return nil, err
 	}
-	//config.SetCache(cacheKey, posts)
 
-	//waitgroup is a counter thata lets one goroutine waits for other
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-
-	sem := make(chan struct{}, 10) //limit concurrency to 10
+	sem := make(chan struct{}, 10)
 
 	for _, post := range posts {
 		post := post
-		id := post["id"].(string)
+		id := post["id"].(int)
 
-		wg.Add(3)
+		wg.Add(2)
 
 		go func() {
 			defer wg.Done()
-			sem <- struct{}{}        //acquire semaphore
-			defer func() { <-sem }() //release semaphore
-			count := s.repo.LikeCount(ctx, id)
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			likes := s.repo.LikeCount(strconv.Itoa(id))
+
 			mu.Lock()
-			post["like_count"] = count
+			post["likes"] = likes
 			mu.Unlock()
 		}()
+
 		go func() {
 			defer wg.Done()
-			sem <- struct{}{}        //acquire semaphore
-			defer func() { <-sem }() //release semaphore
+			sem <- struct{}{}
+			defer func() { <-sem }()
 
-			comments := s.repo.FetchComment(ctx, id)
-			commentCount := s.repo.CommentCount(ctx, id)
+			comments := s.repo.CommentCount(strconv.Itoa(id))
 
 			mu.Lock()
-			post["comment_count"] = commentCount
 			post["comments"] = comments
 			mu.Unlock()
-
 		}()
-		go func() {
-			defer wg.Done()
-			//semaphore is like traffic controller and limits number of goroutine accessing a resource
-			sem <- struct{}{}        //acquire semaphore
-			defer func() { <-sem }() //release semaphore
-
-			count := s.repo.ShareCount(ctx, id)
-			mu.Lock()
-			post["share_count"] = count
-			mu.Unlock()
-		}()
-
 	}
-	wg.Wait() //if counter never reached 0,it deadlock
+
+	wg.Wait()
 	return posts, nil
 }
 
-func (s *PostService) SharePost(postId, userId string) error {
-	return s.repo.SharePost(postId, userId)
-}
-
-func (s *PostService) Latestlikes(ctx context.Context) (string, error) {
-	return s.repo.LatestLikeAcrossPosts(ctx)
+func (s *PostService) SharePost(postId, authId string) error {
+	return s.repo.SharePost(postId, authId)
 }

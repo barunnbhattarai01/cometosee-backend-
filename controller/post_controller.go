@@ -4,7 +4,6 @@ import (
 	"cometosee/common"
 	"cometosee/service"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -40,112 +39,114 @@ func NewPostController(service *service.PostService) *PostController {
 }
 
 func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	type ReqBody struct {
-		Caption   string `json:"caption"`
-		ImageURL  string `json:"image_url"`
-		Community string `json:"community"`
-		Username  string `json:"username"`
+
+	type Req struct {
+		AuthID  int    `json:"auth_id"`
+		Caption string `json:"caption"`
+		Image   string `json:"image"`
 	}
 
-	var body ReqBody
-	if err := common.ParseJSONBody(r, &body); err != nil {
-		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-	id, err := c.service.UploadPost(
-		body.Caption,
-		body.ImageURL,
-		body.Community,
-		body.Username,
-	)
+	var body Req
+	common.ParseJSONBody(r, &body)
 
+	id, err := c.service.UploadPost(body.AuthID, body.Caption, body.Image)
 	if err != nil {
-		common.WriteJSONError(w, "failed to upload post", http.StatusInternalServerError)
+		common.WriteJSONError(w, "upload failed", 500)
 		return
 	}
 
 	c.PostUploadtotal.Inc()
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "sucessfully uploaded",
-		"docId":   id,
+		"post_id": id,
 	})
 }
 
 func (c *PostController) LikePost(w http.ResponseWriter, r *http.Request) {
-	type Reqbody struct {
-		PostId string `json:"post_id"`
-		UserId string `json:"user_id"`
+
+	type Req struct {
+		PostID string `json:"post_id"`
+		AuthID string `json:"auth_id"`
 	}
 
-	var body Reqbody
+	var body Req
 	common.ParseJSONBody(r, &body)
 
-	liked, _ := c.service.LikePost(body.PostId, body.UserId)
-	if liked {
-		fmt.Fprint(w, "liked")
-	} else {
-		fmt.Fprintf(w, "unliked")
+	liked, err := c.service.LikePost(body.PostID, body.AuthID)
+	if err != nil {
+		common.WriteJSONError(w, "error", 500)
+		return
 	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"liked": liked,
+	})
 }
 
 func (c *PostController) CommentPost(w http.ResponseWriter, r *http.Request) {
-	type ReqBody struct {
-		PostId  string `json:"post_id"`
-		UserID  string `json:"user_id"`
+
+	type Req struct {
+		PostID  string `json:"post_id"`
+		AuthID  string `json:"auth_id"`
 		Comment string `json:"comment"`
 	}
 
-	var body ReqBody
+	var body Req
 	common.ParseJSONBody(r, &body)
 
-	err := c.service.AddComment(body.PostId, body.UserID, body.Comment)
-
+	err := c.service.AddComment(body.PostID, body.AuthID, body.Comment)
 	if err != nil {
-		common.WriteJSONError(w, "failed to add comment", http.StatusInternalServerError)
+		common.WriteJSONError(w, "failed", 500)
 		return
 	}
-	fmt.Fprint(w, "comment sucessfully")
+
+	w.Write([]byte("comment added"))
 }
 
-func (c *PostController) FetchPost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	context := r.Context()
-	posts, _ := c.service.FetchPost(context)
+func (c *PostController) FetchFeed(w http.ResponseWriter, r *http.Request) {
+
+	type Req struct {
+		Lat    float64 `json:"lat"`
+		Lon    float64 `json:"lon"`
+		Radius int     `json:"radius"`
+		Skill  string  `json:"skill"`
+	}
+
+	var body Req
+	common.ParseJSONBody(r, &body)
+
+	posts, err := c.service.FetchFeed(
+		r.Context(),
+		body.Lat,
+		body.Lon,
+		body.Radius,
+		body.Skill,
+	)
+
+	if err != nil {
+		common.WriteJSONError(w, "failed", 500)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "fetch sucessfully",
-		"posts":   posts,
+		"posts": posts,
 	})
 }
 
 func (c *PostController) SharePost(w http.ResponseWriter, r *http.Request) {
-	type ReqBody struct {
-		PostId string `json:"post_id"`
-		UserId string `json:"user_id"`
+
+	type Req struct {
+		PostID string `json:"post_id"`
+		AuthID string `json:"auth_id"`
 	}
 
-	var body ReqBody
-	if err := common.ParseJSONBody(r, &body); err != nil {
-		common.WriteJSONError(w, "invalid request", http.StatusBadRequest)
-		return
-	}
+	var body Req
+	common.ParseJSONBody(r, &body)
 
-	if err := c.service.SharePost(body.PostId, body.UserId); err != nil {
-		common.WriteJSONError(w, "failed to share post", http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Fprint(w, "post shared successfully")
-}
-
-func (c *PostController) Latestlikes(w http.ResponseWriter, r *http.Request) {
-	liker, err := c.service.Latestlikes(r.Context())
+	err := c.service.SharePost(body.PostID, body.AuthID)
 	if err != nil {
-		common.WriteJSONError(w, "failed to fetch latest liker", http.StatusInternalServerError)
+		common.WriteJSONError(w, "failed to share", 500)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "latest liker fetched successfully",
-		"liker":   liker,
-	})
+
+	w.Write([]byte("post shared"))
 }
