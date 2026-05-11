@@ -1,12 +1,9 @@
 package repository
 
 import (
-	"cometosee/firebase"
-	"cometosee/model"
+	"cometosee/intailizer"
 	"context"
-	"time"
-
-	"cloud.google.com/go/firestore"
+	"strconv"
 )
 
 var ctx = context.Background()
@@ -17,202 +14,148 @@ func NewPostRepository() *PostRepository {
 	return &PostRepository{} //this is like constructer in java
 }
 
-func (r *PostRepository) CreatePOST(post model.POSTDATA) (string, error) {
-	client := firebase.Firestore()
-	defer client.Close()
+func (r *PostRepository) CreatePOST(authID int, caption, imageURL string) (string, error) {
+	var id int
 
-	doc, _, err := client.Collection("posts").Add(ctx, post)
+	err := intailizer.DB.QueryRow(`
+		INSERT INTO post (auth_id, caption, images_url)
+		VALUES ($1, $2, $3)
+		RETURNING post_id
+	`, authID, caption, imageURL).Scan(&id)
+
 	if err != nil {
 		return "", err
 	}
-	return doc.ID, nil
+
+	return strconv.Itoa(id), nil
 }
 
-func (r *PostRepository) ToggleLike(postId, userID string) (bool, error) {
-	client := firebase.Firestore()
-	defer client.Close()
+func (r *PostRepository) ToggleLike(postId, authId string) (bool, error) {
 
-	ref := client.Collection("posts").Doc(postId).Collection("likes").Doc(userID)
-	doc, err := ref.Get(ctx)
+	var exists bool
+	err := intailizer.DB.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM post_likes
+			WHERE post_id=$1 AND auth_id=$2
+		)
+	`, postId, authId).Scan(&exists)
 
-	if err == nil && doc.Exists() {
-		ref.Delete(ctx)
-		return false, nil
+	if err != nil {
+		return false, err
 	}
 
-	ref.Set(ctx, map[string]interface{}{
-		"user_id": userID,
-		"created": time.Now(),
-	})
-	return true, nil
-}
-
-func (r *PostRepository) LikeCount(ctx context.Context, postId string) int {
-	client := firebase.Firestore()
-	defer client.Close()
-
-	iter := client.Collection("posts").Doc(postId).Collection("likes").Documents(ctx)
-	count := 0
-
-	for {
-		_, err := iter.Next()
-		if err != nil {
-			break
-		}
-		count++
+	if exists {
+		_, err = intailizer.DB.Exec(`
+			DELETE FROM post_likes
+			WHERE post_id=$1 AND auth_id=$2
+		`, postId, authId)
+		return false, err
 	}
-	return count
+
+	_, err = intailizer.DB.Exec(`
+		INSERT INTO post_likes(post_id, auth_id)
+		VALUES ($1,$2)
+	`, postId, authId)
+
+	return true, err
 }
 
-func (r *PostRepository) Addcomment(postId, userId, comment string) error {
-	client := firebase.Firestore()
-	defer client.Close()
+func (r *PostRepository) AddComment(postId, authId, comment string) error {
+	_, err := intailizer.DB.Exec(`
+		INSERT INTO comments(post_id, auth_id, comment)
+		VALUES ($1,$2,$3)
+	`, postId, authId, comment)
 
-	_, _, err := client.Collection("posts").Doc(postId).Collection("comments").Add(ctx, map[string]interface{}{
-		"user_id": userId,
-		"comment": comment,
-		"created": time.Now(),
-	})
 	return err
 }
 
-func (r *PostRepository) CommentCount(ctx context.Context, postId string) int {
-	client := firebase.Firestore()
-	defer client.Close()
-
-	iter := client.Collection("posts").Doc(postId).Collection("comments").Documents(ctx)
-	count := 0
-
-	for {
-		_, err := iter.Next()
-		if err != nil {
-			break
-		}
-		count++
-	}
+func (r *PostRepository) LikeCount(postId string) int {
+	var count int
+	intailizer.DB.QueryRow(`
+		SELECT COUNT(*) FROM post_likes WHERE post_id=$1
+	`, postId).Scan(&count)
 	return count
 }
 
-func (r *PostRepository) FetchComment(ctx context.Context, postID string) []model.Comment {
-	client := firebase.Firestore()
-	defer client.Close()
-
-	iter := client.Collection("posts").Doc(postID).Collection("comments").OrderBy("created", firestore.Asc).Documents(ctx)
-
-	var comments []model.Comment
-
-	for {
-		doc, err := iter.Next()
-		if err != nil {
-			break
-		}
-		data := doc.Data()
-		comments = append(comments, model.Comment{
-			ID:      doc.Ref.ID,
-			UserID:  data["user_id"].(string),
-			Comment: data["comment"].(string),
-			Created: data["created"],
-		})
-	}
-	return comments
+func (r *PostRepository) CommentCount(postId string) int {
+	var count int
+	intailizer.DB.QueryRow(`
+		SELECT COUNT(*) FROM comments WHERE post_id=$1
+	`, postId).Scan(&count)
+	return count
 }
 
-func (r *PostRepository) FetchPost(ctx context.Context) ([]map[string]interface{}, error) {
-	clients := firebase.Firestore()
-	defer clients.Close()
+func (r *PostRepository) FetchFeed(
+	ctx context.Context,
+	lat float64,
+	lon float64,
+	radius int,
+	skill string,
+) ([]map[string]interface{}, error) {
 
-	iter := clients.Collection("posts").OrderBy("created", firestore.Desc).Documents(ctx)
+	rows, err := intailizer.DB.QueryContext(ctx, `
+		SELECT 
+			p.post_id,
+			p.caption,
+			p.images_url,
+			a.username,
+			u.skill
+		FROM post p
+		JOIN cometoseeauth a ON p.auth_id = a.auth_id
+		JOIN userdetailinfo u ON u.auth_id = a.auth_id
+		JOIN location l ON l.user_detail_id = u.user_detail_id
+		WHERE 
+			u.skill = $1
+		AND ST_DWithin(
+			l.geom,
+			ST_MakePoint($2, $3)::geography,
+			$4
+		)
+		ORDER BY p.created_at DESC
+	`, skill, lon, lat, radius)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
 	var posts []map[string]interface{}
-	for {
-		doc, err := iter.Next()
-		if err != nil {
-			break
-		}
-		data := doc.Data()
-		data["id"] = doc.Ref.ID
-		posts = append(posts, data)
+
+	for rows.Next() {
+		var id int
+		var caption, imageURL, username, skill string
+
+		rows.Scan(&id, &caption, &imageURL, &username, &skill)
+
+		posts = append(posts, map[string]interface{}{
+			"id":       id,
+			"caption":  caption,
+			"image":    imageURL,
+			"username": username,
+			"skill":    skill,
+		})
 	}
+
 	return posts, nil
 }
 
-func (r *PostRepository) SharePost(postId, userId string) error {
-	client := firebase.Firestore()
-	defer client.Close()
+func (r *PostRepository) SharePost(postId, authId string) error {
 
-	shareRef := client.
-		Collection("posts").
-		Doc(postId).
-		Collection("user").
-		Doc(userId)
+	_, err := intailizer.DB.Exec(`
+		INSERT INTO post_shares(post_id, auth_id)
+		VALUES ($1, $2)
+		ON CONFLICT (post_id, auth_id) DO NOTHING
+	`, postId, authId)
 
-	doc, err := shareRef.Get(ctx)
-	if err == nil && doc.Exists() {
-		return nil
-	}
-
-	_, err = shareRef.Set(ctx, map[string]interface{}{
-		"user_id": userId,
-		"created": time.Now(),
-	})
 	return err
 }
 
-func (r *PostRepository) ShareCount(ctx context.Context, postId string) int {
-	client := firebase.Firestore()
-	defer client.Close()
+func (r *PostRepository) ShareCount(postId string) int {
+	var count int
 
-	iter := client.Collection("posts").
-		Doc(postId).
-		Collection("shares").
-		Documents(ctx)
+	intailizer.DB.QueryRow(`
+		SELECT COUNT(*) FROM post_shares WHERE post_id=$1
+	`, postId).Scan(&count)
 
-	count := 0
-	for {
-		_, err := iter.Next()
-		if err != nil {
-			break
-		}
-		count++
-	}
 	return count
-}
-
-func (r *PostRepository) LatestLikeAcrossPosts(ctx context.Context) (string, error) {
-	client := firebase.Firestore()
-	defer client.Close()
-
-	postsIter := client.Collection("posts").Documents(ctx)
-
-	var latestUserId string
-	var latestTime time.Time
-
-	for {
-		postDoc, err := postsIter.Next()
-		if err != nil {
-			break
-		}
-		postId := postDoc.Ref.ID
-
-		likeIter := client.Collection("posts").Doc(postId).Collection("likes").
-			OrderBy("created", firestore.Desc).Limit(1).Documents(ctx)
-
-		likeDoc, err := likeIter.Next()
-		if err != nil {
-			continue
-		}
-
-		data := likeDoc.Data()
-		created, ok := data["created"].(time.Time)
-		if !ok {
-			continue
-		}
-
-		if latestTime.IsZero() || created.After(latestTime) {
-			latestTime = created
-			latestUserId = likeDoc.Ref.ID
-		}
-	}
-
-	return latestUserId,nil
 }

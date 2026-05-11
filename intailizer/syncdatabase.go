@@ -230,6 +230,20 @@ EXECUTE FUNCTION update_geom_column();
 	if err != nil {
 		log.Fatal("error in creating like table")
 	}
+	//sharepost
+	sharepost := `CREATE TABLE if not exists post_shares (
+    share_id SERIAL PRIMARY KEY,
+    post_id INT NOT NULL REFERENCES post(post_id) ON DELETE CASCADE,
+    auth_id INT NOT NULL REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+
+    UNIQUE(post_id, auth_id)
+);`
+
+	_, err = DB.Exec(sharepost)
+	if err != nil {
+		log.Fatal("error in creating share table")
+	}
 
 	fmt.Print("table ready")
 }
