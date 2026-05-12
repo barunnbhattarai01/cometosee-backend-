@@ -2,15 +2,16 @@ package routes
 
 import (
 	"cometosee/controller"
+	"cometosee/middleware"
 
 	"github.com/gorilla/mux"
 )
 
 func PostRoutes(gor *mux.Router, postcontroller *controller.PostController) {
-	gor.HandleFunc("/post", postcontroller.UploadPost).Methods("POST")
-	gor.HandleFunc("/post/like", postcontroller.LikePost).Methods("POST")
-	gor.HandleFunc("/post/comment", postcontroller.CommentPost).Methods("POST")
-	//gor.HandleFunc("/post/share", postcontroller.).Methods("POST")
-	gor.HandleFunc("/getpost", postcontroller.FetchFeed).Methods("POST")
+	gor.HandleFunc("/post", middleware.JwtMiddlware(postcontroller.UploadPost)).Methods("POST")
+	gor.HandleFunc("/post/like", middleware.JwtMiddlware(postcontroller.LikePost)).Methods("POST")
+	gor.HandleFunc("/post/comment", middleware.JwtMiddlware(postcontroller.CommentPost)).Methods("POST")
+	gor.HandleFunc("/post/share", middleware.JwtMiddlware(postcontroller.SharePost)).Methods("POST")
+	gor.HandleFunc("/getpost", middleware.JwtMiddlware(postcontroller.FetchFeed)).Methods("POST")
 	//gor.HandleFunc("/latestlike", postcontroller.Latestlikes).Methods("GET")
 }

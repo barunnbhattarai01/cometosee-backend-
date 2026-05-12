@@ -3,7 +3,6 @@ package service
 import (
 	"cometosee/repository"
 	"context"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -18,28 +17,34 @@ func NewPostService(repo *repository.PostRepository) *PostService {
 	}
 }
 
-func (s *PostService) UploadPost(authID int, caption, image string) (string, error) {
+func (s *PostService) UploadPost(authID int, caption, image string) (int, error) {
 	return s.repo.CreatePOST(authID, caption, image)
 }
 
-func (s *PostService) LikePost(postId, authId string) (bool, error) {
+func (s *PostService) LikePost(postId, authId int) (bool, error) {
 	return s.repo.ToggleLike(postId, authId)
 }
 
-func (s *PostService) AddComment(postId, authId, comment string) error {
+func (s *PostService) AddComment(postId int, authId int, comment string) error {
 	return s.repo.AddComment(postId, authId, comment)
 }
 
 func (s *PostService) FetchFeed(
 	ctx context.Context,
+	authId int,
 	lat float64,
 	lon float64,
 	radius int,
-	skill string,
+
 ) ([]map[string]interface{}, error) {
 
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
+
+	skill, err := s.repo.GetUserSkill(authId)
+	if err != nil {
+		return nil, err
+	}
 
 	posts, err := s.repo.FetchFeed(ctx, lat, lon, radius, skill)
 	if err != nil {
@@ -61,7 +66,7 @@ func (s *PostService) FetchFeed(
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			likes := s.repo.LikeCount(strconv.Itoa(id))
+			likes := s.repo.LikeCount(id)
 
 			mu.Lock()
 			post["likes"] = likes
@@ -73,7 +78,7 @@ func (s *PostService) FetchFeed(
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			comments := s.repo.CommentCount(strconv.Itoa(id))
+			comments := s.repo.CommentCount(id)
 
 			mu.Lock()
 			post["comments"] = comments
@@ -85,6 +90,6 @@ func (s *PostService) FetchFeed(
 	return posts, nil
 }
 
-func (s *PostService) SharePost(postId, authId string) error {
+func (s *PostService) SharePost(postId, authId int) error {
 	return s.repo.SharePost(postId, authId)
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"cometosee/intailizer"
 	"cometosee/model"
+	"fmt"
 )
 
 type UserDetailInfo interface {
@@ -10,6 +11,8 @@ type UserDetailInfo interface {
 	TakeUserLocation(user *model.Location) (string, error)
 	IsProfileExists(auth_id int) (bool, error)
 	GetUserDetailIDByAuthID(authID int) (int, error)
+	UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error)
+	UpdateLocation(user *model.Location) (string, error)
 }
 
 type userDetailInfoRepo struct{}
@@ -88,4 +91,80 @@ func (r *userDetailInfoRepo) GetUserDetailIDByAuthID(authID int) (int, error) {
 	}
 
 	return id, nil
+}
+
+func (r *userDetailInfoRepo) UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error) {
+
+	query := `
+	UPDATE userdetailinfo
+	SET 
+		calling_name = $1,
+		sport = $2,
+		skill = $3,
+		avatar = $4,
+		bio = $5
+	WHERE auth_id = $6
+	`
+
+	result, err := intailizer.DB.Exec(
+		query,
+		user.Calling_name,
+		user.Sport,
+		user.Skill,
+		user.Avatar,
+		user.Bio,
+		user.AuthId,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return "", err
+	}
+
+	if rowsAffected == 0 {
+		return "", fmt.Errorf("no user found with given auth_id")
+	}
+
+	return "User detail updated successfully", nil
+}
+
+func (r *userDetailInfoRepo) UpdateLocation(user *model.Location) (string, error) {
+	query := `
+	UPDATE location
+	SET 
+		country = $1,
+		city = $2,
+		latitude = $3,
+		longitude = $4,
+		geom = ST_SetSRID(ST_MakePoint($4, $3), 4326)::geography
+	WHERE user_detail_id = $5
+	`
+
+	result, err := intailizer.DB.Exec(
+		query,
+		user.Country,
+		user.City,
+		user.Latitude,
+		user.Longitude,
+		user.User_Detail_Id,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return "", err
+	}
+
+	if rowsAffected == 0 {
+		return "", fmt.Errorf("no location found for given user_detail_id")
+	}
+
+	return "User location updated successfully", nil
 }

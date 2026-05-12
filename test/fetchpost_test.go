@@ -16,7 +16,7 @@ func TestFetchPost(t *testing.T) {
 	//di
 	config.InitCache()
 	postcontroller := di.SetupPostController()
-	postcontroller.FetchPost(rec, req)
+	postcontroller.FetchFeed(rec, req)
 	t.Log("fetching posts")
 	res := rec.Result()
 	defer res.Body.Close()

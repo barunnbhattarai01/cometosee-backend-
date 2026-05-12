@@ -49,6 +49,9 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 	var body Req
 	common.ParseJSONBody(r, &body)
 
+	authId := common.GetAuthid(r.Context())
+	body.AuthID = int(authId)
+
 	id, err := c.service.UploadPost(body.AuthID, body.Caption, body.Image)
 	if err != nil {
 		common.WriteJSONError(w, "upload failed", 500)
@@ -64,12 +67,15 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 func (c *PostController) LikePost(w http.ResponseWriter, r *http.Request) {
 
 	type Req struct {
-		PostID string `json:"post_id"`
-		AuthID string `json:"auth_id"`
+		PostID int `json:"post_id"`
+		AuthID int `json:"auth_id"`
 	}
 
 	var body Req
 	common.ParseJSONBody(r, &body)
+
+	authId := common.GetAuthid(r.Context())
+	body.AuthID = int(authId)
 
 	liked, err := c.service.LikePost(body.PostID, body.AuthID)
 	if err != nil {
@@ -85,13 +91,16 @@ func (c *PostController) LikePost(w http.ResponseWriter, r *http.Request) {
 func (c *PostController) CommentPost(w http.ResponseWriter, r *http.Request) {
 
 	type Req struct {
-		PostID  string `json:"post_id"`
-		AuthID  string `json:"auth_id"`
+		PostID  int    `json:"post_id"`
+		AuthID  int    `json:"auth_id"`
 		Comment string `json:"comment"`
 	}
 
 	var body Req
 	common.ParseJSONBody(r, &body)
+
+	authId := common.GetAuthid(r.Context())
+	body.AuthID = int(authId)
 
 	err := c.service.AddComment(body.PostID, body.AuthID, body.Comment)
 	if err != nil {
@@ -99,7 +108,7 @@ func (c *PostController) CommentPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("comment added"))
+	common.WriteJSONMessage(w, "comment added")
 }
 
 func (c *PostController) FetchFeed(w http.ResponseWriter, r *http.Request) {
@@ -108,18 +117,19 @@ func (c *PostController) FetchFeed(w http.ResponseWriter, r *http.Request) {
 		Lat    float64 `json:"lat"`
 		Lon    float64 `json:"lon"`
 		Radius int     `json:"radius"`
-		Skill  string  `json:"skill"`
 	}
 
 	var body Req
 	common.ParseJSONBody(r, &body)
 
+	authId := common.GetAuthid(r.Context())
+
 	posts, err := c.service.FetchFeed(
 		r.Context(),
+		int(authId),
 		body.Lat,
 		body.Lon,
 		body.Radius,
-		body.Skill,
 	)
 
 	if err != nil {
@@ -135,12 +145,15 @@ func (c *PostController) FetchFeed(w http.ResponseWriter, r *http.Request) {
 func (c *PostController) SharePost(w http.ResponseWriter, r *http.Request) {
 
 	type Req struct {
-		PostID string `json:"post_id"`
-		AuthID string `json:"auth_id"`
+		PostID int `json:"post_id"`
+		AuthID int `json:"auth_id"`
 	}
 
 	var body Req
 	common.ParseJSONBody(r, &body)
+
+	authId := common.GetAuthid(r.Context())
+	body.AuthID = int(authId)
 
 	err := c.service.SharePost(body.PostID, body.AuthID)
 	if err != nil {
@@ -148,5 +161,5 @@ func (c *PostController) SharePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("post shared"))
+	common.WriteJSONMessage(w, "shared sucessfully")
 }

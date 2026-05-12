@@ -121,7 +121,6 @@ func (c *ConnectionController) GetReceivedRequests(w http.ResponseWriter, r *htt
 	}
 
 	email := common.GetEmail(r.Context())
-	fmt.Print(email)
 
 	if email == "" {
 		http.Error(w, `{"message":"unauthorized user"}`, http.StatusUnauthorized)

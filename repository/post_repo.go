@@ -3,7 +3,6 @@ package repository
 import (
 	"cometosee/intailizer"
 	"context"
-	"strconv"
 )
 
 var ctx = context.Background()
@@ -14,7 +13,7 @@ func NewPostRepository() *PostRepository {
 	return &PostRepository{} //this is like constructer in java
 }
 
-func (r *PostRepository) CreatePOST(authID int, caption, imageURL string) (string, error) {
+func (r *PostRepository) CreatePOST(authID int, caption, imageURL string) (int, error) {
 	var id int
 
 	err := intailizer.DB.QueryRow(`
@@ -24,13 +23,13 @@ func (r *PostRepository) CreatePOST(authID int, caption, imageURL string) (strin
 	`, authID, caption, imageURL).Scan(&id)
 
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
-	return strconv.Itoa(id), nil
+	return id, nil
 }
 
-func (r *PostRepository) ToggleLike(postId, authId string) (bool, error) {
+func (r *PostRepository) ToggleLike(postId, authId int) (bool, error) {
 
 	var exists bool
 	err := intailizer.DB.QueryRow(`
@@ -60,7 +59,7 @@ func (r *PostRepository) ToggleLike(postId, authId string) (bool, error) {
 	return true, err
 }
 
-func (r *PostRepository) AddComment(postId, authId, comment string) error {
+func (r *PostRepository) AddComment(postId int, authId int, comment string) error {
 	_, err := intailizer.DB.Exec(`
 		INSERT INTO comments(post_id, auth_id, comment)
 		VALUES ($1,$2,$3)
@@ -69,7 +68,7 @@ func (r *PostRepository) AddComment(postId, authId, comment string) error {
 	return err
 }
 
-func (r *PostRepository) LikeCount(postId string) int {
+func (r *PostRepository) LikeCount(postId int) int {
 	var count int
 	intailizer.DB.QueryRow(`
 		SELECT COUNT(*) FROM post_likes WHERE post_id=$1
@@ -77,7 +76,7 @@ func (r *PostRepository) LikeCount(postId string) int {
 	return count
 }
 
-func (r *PostRepository) CommentCount(postId string) int {
+func (r *PostRepository) CommentCount(postId int) int {
 	var count int
 	intailizer.DB.QueryRow(`
 		SELECT COUNT(*) FROM comments WHERE post_id=$1
@@ -125,7 +124,10 @@ func (r *PostRepository) FetchFeed(
 		var id int
 		var caption, imageURL, username, skill string
 
-		rows.Scan(&id, &caption, &imageURL, &username, &skill)
+		err = rows.Scan(&id, &caption, &imageURL, &username, &skill)
+		if err != nil {
+			return nil, err
+		}
 
 		posts = append(posts, map[string]interface{}{
 			"id":       id,
@@ -139,7 +141,7 @@ func (r *PostRepository) FetchFeed(
 	return posts, nil
 }
 
-func (r *PostRepository) SharePost(postId, authId string) error {
+func (r *PostRepository) SharePost(postId, authId int) error {
 
 	_, err := intailizer.DB.Exec(`
 		INSERT INTO post_shares(post_id, auth_id)
@@ -150,7 +152,7 @@ func (r *PostRepository) SharePost(postId, authId string) error {
 	return err
 }
 
-func (r *PostRepository) ShareCount(postId string) int {
+func (r *PostRepository) ShareCount(postId int) int {
 	var count int
 
 	intailizer.DB.QueryRow(`
@@ -158,4 +160,17 @@ func (r *PostRepository) ShareCount(postId string) int {
 	`, postId).Scan(&count)
 
 	return count
+}
+
+// get skill by authid
+func (r *PostRepository) GetUserSkill(authId int) (string, error) {
+	var skill string
+
+	err := intailizer.DB.QueryRow(`
+		SELECT skill 
+		FROM userdetailinfo 
+		WHERE auth_id = $1
+	`, authId).Scan(&skill)
+
+	return skill, err
 }
