@@ -148,3 +148,18 @@ func (c *UserDetailInfoController) UpdateLocation(w http.ResponseWriter, r *http
 		"message": message,
 	})
 }
+
+func (c *UserDetailInfoController) GetProfile(w http.ResponseWriter, r *http.Request) {
+
+	authId := common.GetAuthid(r.Context())
+
+	profile, err := c.service.GetUserProfile(int(authId))
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"profile": profile,
+	})
+}

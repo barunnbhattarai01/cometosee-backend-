@@ -13,6 +13,7 @@ type UserDetailInfo interface {
 	GetUserDetailIDByAuthID(authID int) (int, error)
 	UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error)
 	UpdateLocation(user *model.Location) (string, error)
+	GetUserProfileByAuthID(authID int) (*model.UserProfileResponse, error)
 }
 
 type userDetailInfoRepo struct{}
@@ -167,4 +168,45 @@ func (r *userDetailInfoRepo) UpdateLocation(user *model.Location) (string, error
 	}
 
 	return "User location updated successfully", nil
+}
+
+func (r *userDetailInfoRepo) GetUserProfileByAuthID(authID int) (*model.UserProfileResponse, error) {
+
+	query := `
+	SELECT 
+		u.auth_id,
+		u.calling_name,
+		u.sport,
+		u.skill,
+		u.avatar,
+		u.bio,
+		COALESCE(l.country, ''),
+		COALESCE(l.city, ''),
+		COALESCE(l.latitude, 0),
+		COALESCE(l.longitude, 0)
+	FROM userdetailinfo u
+	LEFT JOIN location l ON u.user_detail_id = l.user_detail_id
+	WHERE u.auth_id = $1
+	`
+
+	var profile model.UserProfileResponse
+
+	err := intailizer.DB.QueryRow(query, authID).Scan(
+		&profile.AuthId,
+		&profile.CallingName,
+		&profile.Sport,
+		&profile.Skill,
+		&profile.Avatar,
+		&profile.Bio,
+		&profile.Country,
+		&profile.City,
+		&profile.Latitude,
+		&profile.Longitude,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &profile, nil
 }

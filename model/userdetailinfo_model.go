@@ -31,3 +31,16 @@ type Match struct {
 	Status     string   `json:"status"`
 	CreatedAt  string   `json:"created_at"`
 }
+
+type UserProfileResponse struct {
+	AuthId      int     `json:"auth_id"`
+	CallingName string  `json:"calling_name"`
+	Sport       string  `json:"sport"`
+	Skill       string  `json:"skill"`
+	Avatar      string  `json:"avatar"`
+	Bio         string  `json:"bio"`
+	Country     string  `json:"country"`
+	City        string  `json:"city"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+}

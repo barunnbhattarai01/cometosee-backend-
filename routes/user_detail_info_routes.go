@@ -13,4 +13,5 @@ func InitializeUserDetailInfoRoutes(gor *mux.Router, controller *controller.User
 	gor.HandleFunc("/profilestatus", middleware.JwtMiddlware(controller.ProfileStatus)).Methods("GET")
 	gor.HandleFunc("/updateuserdetailinfo", middleware.JwtMiddlware(controller.UpdateUserDetailInfo)).Methods("PATCH")
 	gor.HandleFunc("/updatelocation", middleware.JwtMiddlware(controller.UpdateLocation)).Methods("PATCH")
+	gor.HandleFunc("/fetchuserprofile", middleware.JwtMiddlware(controller.GetProfile)).Methods("GET")
 }

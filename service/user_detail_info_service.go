@@ -13,6 +13,7 @@ type UserDetailInfoService interface {
 	GetUserDetailIDByAuthID(authID int) (int, error)
 	UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error)
 	UpdateLocation(user *model.Location) (string, error)
+	GetUserProfile(authId int) (*model.UserProfileResponse, error)
 }
 
 type userDetailInfoService struct {
@@ -58,10 +59,6 @@ func (s *userDetailInfoService) UpdateUserDetailInfo(user *model.UserDetailInfo)
 		return "", errors.New("auth_id is required")
 	}
 
-	if user.Calling_name == "" || user.Sport == "" || user.Skill == "" || user.Bio == "" {
-		return "", errors.New("All fields are required")
-	}
-
 	message, err := s.repo.UpdateUserDetailInfo(user)
 	if err != nil {
 		return "", err
@@ -76,14 +73,14 @@ func (s *userDetailInfoService) UpdateLocation(user *model.Location) (string, er
 		return "", errors.New("user_detail_id is required")
 	}
 
-	if user.Country == "" || user.City == "" || user.Latitude == 0 || user.Longitude == 0 {
-		return "", errors.New("All fields are required")
-	}
-
 	message, err := s.repo.UpdateLocation(user)
 	if err != nil {
 		return "", err
 	}
 
 	return message, nil
+}
+
+func (s *userDetailInfoService) GetUserProfile(authID int) (*model.UserProfileResponse, error) {
+	return s.repo.GetUserProfileByAuthID(authID)
 }
