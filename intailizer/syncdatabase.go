@@ -245,5 +245,40 @@ EXECUTE FUNCTION update_geom_column();
 		log.Fatal("error in creating share table")
 	}
 
+	//slot
+	slottable := `CREATE TABLE IF NOT EXISTS post_slots (
+    slot_id SERIAL PRIMARY KEY,
+    post_id INT NOT NULL REFERENCES post(post_id) ON DELETE CASCADE,
+    
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+
+    max_participants INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT NOW(),
+
+    CHECK (end_time > start_time)
+);`
+
+	_, err = DB.Exec(slottable)
+	if err != nil {
+		log.Fatal("error in creating slot table")
+	}
+
+	//slot participant
+	slotparticipant := `CREATE TABLE IF NOT EXISTS slot_participants (
+    id SERIAL PRIMARY KEY,
+    slot_id INT NOT NULL REFERENCES post_slots(slot_id) ON DELETE CASCADE,
+    auth_id INT NOT NULL REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
+
+    joined_at TIMESTAMP DEFAULT NOW(),
+
+    UNIQUE(slot_id, auth_id)
+);`
+
+	_, err = DB.Exec(slotparticipant)
+	if err != nil {
+		log.Fatal("error in creating slot participant table")
+	}
+
 	fmt.Print("table ready")
 }
