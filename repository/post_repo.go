@@ -372,3 +372,43 @@ func (r *PostRepository) JoinSlotTx(slotID, authID int) error {
 
 	return tx.Commit()
 }
+
+// fecth comment
+func (r *PostRepository) GetComments(postId int) ([]map[string]interface{}, error) {
+
+	rows, err := intailizer.DB.Query(`
+		SELECT 
+			c.comment,
+			a.username,
+			c.created_at
+		FROM comments c
+		JOIN cometoseeauth a ON a.auth_id = c.auth_id
+		WHERE c.post_id = $1
+		ORDER BY c.created_at DESC
+	`, postId)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []map[string]interface{}
+
+	for rows.Next() {
+		var text, username string
+		var createdAt time.Time
+
+		err := rows.Scan(&text, &username, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+
+		comments = append(comments, map[string]interface{}{
+			"comment":    text,
+			"username":   username,
+			"created_at": createdAt,
+		})
+	}
+
+	return comments, nil
+}

@@ -61,7 +61,7 @@ func (s *PostService) FetchFeed(
 		post := post
 		id := post["id"].(int)
 
-		wg.Add(2)
+		wg.Add(3)
 
 		go func() {
 			defer wg.Done()
@@ -84,6 +84,20 @@ func (s *PostService) FetchFeed(
 
 			mu.Lock()
 			post["comments"] = comments
+			mu.Unlock()
+		}()
+		go func() {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			commentsList, err := s.repo.GetComments(id)
+			if err != nil {
+				return
+			}
+
+			mu.Lock()
+			post["comments_list"] = commentsList
 			mu.Unlock()
 		}()
 	}
