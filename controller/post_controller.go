@@ -2,6 +2,7 @@ package controller
 
 import (
 	"cometosee/common"
+	"cometosee/model"
 	"cometosee/service"
 	"encoding/json"
 	"net/http"
@@ -162,4 +163,60 @@ func (c *PostController) SharePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.WriteJSONMessage(w, "shared sucessfully")
+}
+
+// slot
+func (c *PostController) CreateSlot(w http.ResponseWriter, r *http.Request) {
+	var slot model.PostSlot
+
+	err := json.NewDecoder(r.Body).Decode(&slot)
+	if err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	slotId, err := c.service.CreateSlot(slot)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "sucessfully created a slot",
+		"slot_id": slotId,
+	})
+}
+
+func (c *PostController) JoinSlot(w http.ResponseWriter, r *http.Request) {
+
+	type Req struct {
+		SlotID int `json:"slot_id"`
+	}
+
+	var body Req
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+
+	if body.SlotID == 0 {
+		http.Error(w, "slot_id required", http.StatusBadRequest)
+		return
+	}
+
+	authID := common.GetAuthid(r.Context())
+	if authID == 0 {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err := c.service.JoinSlot(body.SlotID, int(authID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "joined successfully",
+	})
 }

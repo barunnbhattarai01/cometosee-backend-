@@ -1,8 +1,10 @@
 package service
 
 import (
+	"cometosee/model"
 	"cometosee/repository"
 	"context"
+	"errors"
 	"sync"
 	"time"
 )
@@ -92,4 +94,21 @@ func (s *PostService) FetchFeed(
 
 func (s *PostService) SharePost(postId, authId int) error {
 	return s.repo.SharePost(postId, authId)
+}
+
+// slot
+func (s *PostService) CreateSlot(slot model.PostSlot) (int, error) {
+	if slot.EndTime.Before(slot.StartTime) {
+		return 0, errors.New("end time must be after start time")
+	}
+	slotid, err := s.repo.CreateSlot(slot)
+	if err != nil {
+		return 0, err
+	}
+
+	return slotid, nil
+}
+
+func (s *PostService) JoinSlot(slotID, authID int) error {
+	return s.repo.JoinSlotTx(slotID, authID)
 }
