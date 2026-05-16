@@ -37,8 +37,9 @@ func (c *AgoraController) CreateCall(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"token":   token,
-		"channel": session.AgoraChannelName,
+		"session_id": session.Id,
+		"token":      token,
+		"channel":    session.AgoraChannelName,
 	})
 }
 
