@@ -15,11 +15,6 @@ const (
 	EventNewMessage  = "new message"
 	EventChatRoom    = "change room"
 	EventRegister    = "register"
-
-	//for webrtc
-	Web_rtcoffer     = "webrtc offer"
-	Web_rtcanswer    = "webrtc answer"
-	Web_rtccandidate = "webrtc candidate"
 )
 
 type SendMessageEvent struct {
