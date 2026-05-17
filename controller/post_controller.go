@@ -171,13 +171,13 @@ func (c *PostController) CreateSlot(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&slot)
 	if err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		common.WriteJSONError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
 	slotId, err := c.service.CreateSlot(slot)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		common.WriteJSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -195,24 +195,24 @@ func (c *PostController) JoinSlot(w http.ResponseWriter, r *http.Request) {
 
 	var body Req
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid body", http.StatusBadRequest)
+		common.WriteJSONError(w, "invalid body", http.StatusBadRequest)
 		return
 	}
 
 	if body.SlotID == 0 {
-		http.Error(w, "slot_id required", http.StatusBadRequest)
+		common.WriteJSONError(w, "slot_id required", http.StatusBadRequest)
 		return
 	}
 
 	authID := common.GetAuthid(r.Context())
 	if authID == 0 {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		common.WriteJSONError(w, "auth_id needed", http.StatusUnauthorized)
 		return
 	}
 
 	err := c.service.JoinSlot(body.SlotID, int(authID))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
