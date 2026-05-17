@@ -24,6 +24,7 @@ func (s *WebsocketService) registerHandler() {
 	s.Manager.Handlers[model.EventRegister] = s.Register
 	s.Manager.Handlers[model.EventChatRoom] = s.ChangeRoom
 	s.Manager.Handlers[model.EventSendMessage] = s.SendMessage
+	s.Manager.Handlers[model.EventVideoCallInvite] = s.VideoCallInvite
 
 }
 

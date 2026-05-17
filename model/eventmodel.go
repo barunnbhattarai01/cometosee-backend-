@@ -11,10 +11,11 @@ type Event struct {
 }
 
 const (
-	EventSendMessage = "send message"
-	EventNewMessage  = "new message"
-	EventChatRoom    = "change room"
-	EventRegister    = "register"
+	EventSendMessage     = "send message"
+	EventNewMessage      = "new message"
+	EventChatRoom        = "change room"
+	EventRegister        = "register"
+	EventVideoCallInvite = "video call invite"
 )
 
 type SendMessageEvent struct {
@@ -35,4 +36,10 @@ type ChangeRoomEvent struct {
 type RegisterEvent struct {
 	Name string `json:"name"`
 	Room string `json:"room,omitempty"`
+}
+type VideoCallInviteEvent struct {
+	From         string `json:"from"`
+	To           string `json:"to"`
+	SessionID    int64  `json:"session_id"`
+	ConnectionID int64  `json:"connection_id"`
 }

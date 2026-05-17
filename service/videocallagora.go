@@ -4,7 +4,9 @@ import (
 	"cometosee/features"
 	"cometosee/model"
 	"cometosee/repository"
+	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -85,4 +87,28 @@ func (s *VideoCallService) End(sessionID, connectionID int64) (*model.VideoCallS
 	}
 
 	return s.repo.End(sessionID)
+}
+
+// handler for video call
+func (s *WebsocketService) VideoCallInvite(event model.Event, c *model.Client) error {
+	var invite model.VideoCallInviteEvent
+	if err := json.Unmarshal(event.Payload, &invite); err != nil {
+		return err
+	}
+
+	// forward the raw event as-is to the target user
+	s.Manager.RLock()
+	defer s.Manager.RUnlock()
+
+	if target, ok := s.Manager.Users[invite.To]; ok {
+		select {
+		case target.Egress <- event:
+		default:
+			log.Printf("target %s not ready to receive video call invite\n", invite.To)
+		}
+	} else {
+		log.Printf("video call invite: user %s not found\n", invite.To)
+	}
+
+	return nil
 }
