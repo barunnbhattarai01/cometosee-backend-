@@ -96,11 +96,28 @@ func (s *WebsocketService) VideoCallInvite(event model.Event, c *model.Client) e
 		return err
 	}
 
+	channelName := fmt.Sprintf("call_%d_%d", invite.SessionID, invite.ConnectionID)
+
+	payload := map[string]interface{}{
+		"from":          invite.From,
+		"to":            invite.To,
+		"session_id":    invite.SessionID,
+		"connection_id": invite.ConnectionID,
+		"channel_name":  channelName,
+	}
+
+	updatedEvent, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	event.Payload = updatedEvent
+
 	// forward the raw event as-is to the target user
 	s.Manager.RLock()
-	defer s.Manager.RUnlock()
+	target, ok := s.Manager.Users[invite.To]
+	s.Manager.RUnlock()
 
-	if target, ok := s.Manager.Users[invite.To]; ok {
+	if ok {
 		select {
 		case target.Egress <- event:
 		default:

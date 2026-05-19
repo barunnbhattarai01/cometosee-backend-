@@ -34,3 +34,5 @@ func (s *WebsocketService) RouteEvent(event model.Event, c *model.Client) error 
 	}
 	return fmt.Errorf("unknown event type: %s", event.Type)
 }
+
+
