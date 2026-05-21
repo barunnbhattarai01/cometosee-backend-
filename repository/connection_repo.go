@@ -12,6 +12,7 @@ type ConnectionRepository interface {
 	GetUserConnections(user string) ([]model.Connection, error)
 	UnsendConnection(userLow, userHigh string) error
 	Userfilteraftersentandblock(user1, user2 string) (bool, error)
+	ConnectedPeople(user string) ([]string, error)
 }
 
 type ConnectionRepo struct{}
@@ -128,4 +129,37 @@ AND status IN ('pending', 'blocked')
 		return false, err
 	}
 	return count > 0, nil
+}
+
+//need to fetch a connected people to show connected people
+
+func (r *ConnectionRepo) ConnectedPeople(user string) ([]string, error) {
+	query := `
+SELECT 
+    CASE 
+        WHEN user_id_1 = $1 THEN user_id_2
+        ELSE user_id_1
+    END AS connected_user
+FROM connectionstable
+WHERE (user_id_1 = $1 OR user_id_2 = $1)
+AND status = 'accepted'
+`
+
+	rows, err := intailizer.DB.Query(query, user)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []string
+
+	for rows.Next() {
+		var u string
+		if err := rows.Scan(&u); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+
+	return users, nil
 }

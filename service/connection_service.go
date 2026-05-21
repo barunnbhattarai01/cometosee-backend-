@@ -15,6 +15,7 @@ type ConnectionService interface {
 	GetSentRequests(user string) ([]model.Connection, error)
 	UnsendRequest(user1, user2 string) error
 	UserFilteraftersentandblock(user1, user2 string) (bool, error)
+	ConnectedPeople(user string) ([]string, error)
 }
 
 type connectionService struct {
@@ -151,4 +152,15 @@ func (s *connectionService) UserFilteraftersentandblock(user1, user2 string) (bo
 	}
 
 	return s.repo.Userfilteraftersentandblock(userId1, userId2)
+}
+
+// need to fetch comnected user
+func (s *connectionService) ConnectedPeople(user string) ([]string, error) {
+	result, err := s.repo.ConnectedPeople(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+
 }

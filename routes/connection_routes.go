@@ -16,5 +16,6 @@ func ConnectionRoutes(gor *mux.Router, connectionController *controller.Connecti
 	gor.HandleFunc("/connection/sended", middleware.JwtMiddlware(connectionController.GetSentRequests)).Methods("GET")
 	gor.HandleFunc("/connection/unsend", connectionController.UnsendRequest).Methods("POST")
 	gor.HandleFunc("/connection/filter", connectionController.UserFilteraftersentandblock).Methods("POST")
+	gor.HandleFunc("/connection/connectedpeople", middleware.JwtMiddlware(connectionController.ConnectedPeople)).Methods("GET")
 
 }

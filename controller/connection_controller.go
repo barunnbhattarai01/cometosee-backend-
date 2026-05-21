@@ -215,3 +215,21 @@ func (c *ConnectionController) UserFilteraftersentandblock(w http.ResponseWriter
 		"result":  result,
 	})
 }
+
+func (c *ConnectionController) ConnectedPeople(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	email := common.GetEmail(r.Context())
+
+	result, err := c.service.ConnectedPeople(email)
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "sucessfully fecthed conneted people",
+		"result":  result,
+	})
+
+}
