@@ -49,7 +49,7 @@ func (c *AuthController) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := c.service.Signup(body); err != nil {
-		common.WriteJSONError(w, "error creating user", http.StatusInternalServerError)
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	c.AuthTotal.Inc()

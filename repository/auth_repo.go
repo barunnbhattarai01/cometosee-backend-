@@ -9,6 +9,7 @@ type AuthRepositry interface {
 	CreateUser(user model.Auth) error
 	GetUserByEmail(email string) (*model.Auth, error)
 	ForgetPassword(email, password string) error
+	GetNamebyusername(username string) (*model.Auth, error)
 }
 
 type authrepo struct{}
@@ -43,4 +44,15 @@ func (r *authrepo) ForgetPassword(email, password string) error {
 	}
 
 	return nil
+}
+func (r *authrepo) GetNamebyusername(username string) (*model.Auth, error) {
+
+	var user model.Auth
+	err := intailizer.DB.QueryRow(
+		`SELECT auth_id ,username,password,email FROM cometoseeauth WHERE username=$1`, username,
+	).Scan(&user.Auth_id, &user.Username, &user.Password, &user.Email)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
