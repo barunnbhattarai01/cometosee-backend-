@@ -412,3 +412,47 @@ func (r *PostRepository) GetComments(postId int) ([]map[string]interface{}, erro
 
 	return comments, nil
 }
+
+// need to fetch joined user from slot
+func (r *PostRepository) GetSlotParticipants(slotID int) ([]map[string]interface{}, error) {
+	query := `
+	SELECT 
+		a.auth_id,
+		a.username,
+		u.calling_name,
+		u.avatar
+	FROM slot_participants sp
+	JOIN cometoseeauth a ON sp.auth_id = a.auth_id
+	LEFT JOIN userdetailinfo u ON a.auth_id = u.auth_id
+	WHERE sp.slot_id = $1;
+	`
+
+	rows, err := intailizer.DB.Query(query, slotID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []map[string]interface{}
+
+	for rows.Next() {
+		var id int
+		var username, callingName, avatar *string
+
+		err := rows.Scan(&id, &username, &callingName, &avatar)
+		if err != nil {
+			return nil, err
+		}
+
+		user := map[string]interface{}{
+			"auth_id":      id,
+			"username":     username,
+			"calling_name": callingName,
+			"avatar":       avatar,
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}

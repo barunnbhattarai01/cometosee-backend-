@@ -126,3 +126,8 @@ func (s *PostService) CreateSlot(slot model.PostSlot) (int, error) {
 func (s *PostService) JoinSlot(slotID, authID int) error {
 	return s.repo.JoinSlotTx(slotID, authID)
 }
+
+// fetch joined user from slot
+func (s *PostService) GetSlotParticipants(slotID int) ([]map[string]interface{}, error) {
+	return s.repo.GetSlotParticipants(slotID)
+}

@@ -6,6 +6,7 @@ import (
 	"cometosee/service"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -218,5 +219,33 @@ func (c *PostController) JoinSlot(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "joined successfully",
+	})
+}
+
+func (c *PostController) GetparticipantsFromslot(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		common.WriteJSONError(w, "invalid methods", http.StatusUnauthorized)
+		return
+	}
+
+	slotIDStr := r.URL.Query().Get("slot_id")
+
+	slotID, err := strconv.Atoi(slotIDStr)
+	if err != nil {
+		http.Error(w, "invalid slot_id", http.StatusBadRequest)
+		return
+	}
+
+	users, err := c.service.GetSlotParticipants(slotID)
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "sucessfully fetced the user",
+		"user":    users,
 	})
 }
