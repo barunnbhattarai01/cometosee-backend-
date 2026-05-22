@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net/mail"
 	"net/smtp"
 	"os"
 	"strings"
@@ -39,6 +40,10 @@ func (s *authService) Signup(user model.Auth) error {
 	}
 	user.Password = string(hash)
 	user.Email = strings.ToLower(user.Email)
+	_, err = mail.ParseAddress(user.Email)
+	if err != nil {
+		return errors.New("invalid email format")
+	}
 
 	return s.repo.CreateUser(user)
 }
