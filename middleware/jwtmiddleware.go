@@ -67,11 +67,21 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		username, ok := claims["username"].(string)
+
+		if !ok {
+			http.Error(w, "username not found", http.StatusUnauthorized)
+			return
+		}
+
 		// add email to context
 		ctx := context.WithValue(r.Context(), "email", email)
 
 		//add authid to context
 		ctx = context.WithValue(ctx, "authId", authId)
+
+		//add username to context
+		ctx = context.WithValue(ctx, "username", username)
 
 		next(w, r.WithContext(ctx))
 

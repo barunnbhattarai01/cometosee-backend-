@@ -12,7 +12,7 @@ type ConnectionRepository interface {
 	GetUserConnections(user string) ([]model.Connection, error)
 	UnsendConnection(userLow, userHigh string) error
 	Userfilteraftersentandblock(user1, user2 string) (bool, error)
-	ConnectedPeople(user string) ([]string, error)
+	ConnectedPeople(user string) ([]model.UserPublic, error)
 }
 
 type ConnectionRepo struct{}
@@ -51,6 +51,7 @@ LIMIT 1;
 }
 
 func (r *ConnectionRepo) CreateConnection(conn model.Connection) error {
+
 	query := `
 INSERT INTO connectionstable (user_id_1, user_id_2, requested_by, status)
 VALUES ($1, $2, $3, $4)
@@ -133,16 +134,11 @@ AND status IN ('pending', 'blocked')
 
 //need to fetch a connected people to show connected people
 
-func (r *ConnectionRepo) ConnectedPeople(user string) ([]string, error) {
+func (r *ConnectionRepo) ConnectedPeople(user string) ([]model.UserPublic, error) {
 	query := `
-SELECT 
-    CASE 
-        WHEN user_id_1 = $1 THEN user_id_2
-        ELSE user_id_1
-    END AS connected_user
+SELECT id,user_id_2 
 FROM connectionstable
-WHERE (user_id_1 = $1 OR user_id_2 = $1)
-AND status = 'accepted'
+WHERE status = 'accepted' AND user_id_1 = $1
 `
 
 	rows, err := intailizer.DB.Query(query, user)
@@ -151,11 +147,11 @@ AND status = 'accepted'
 	}
 	defer rows.Close()
 
-	var users []string
+	var users []model.UserPublic
 
 	for rows.Next() {
-		var u string
-		if err := rows.Scan(&u); err != nil {
+		var u model.UserPublic
+		if err := rows.Scan(&u.ID, &u.Username); err != nil {
 			return nil, err
 		}
 		users = append(users, u)

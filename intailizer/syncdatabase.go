@@ -17,7 +17,7 @@ func Syncdatabase() {
  create table if not exists cometoseeauth(
  auth_id serial primary key,
  email text unique not null,
- username text not null,
+ username text unique not null,
  password text not null
  )  
    `

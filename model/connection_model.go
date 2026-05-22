@@ -19,3 +19,8 @@ type Connection struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+type UserPublic struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+}

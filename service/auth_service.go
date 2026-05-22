@@ -40,11 +40,6 @@ func (s *authService) Signup(user model.Auth) error {
 	user.Password = string(hash)
 	user.Email = strings.ToLower(user.Email)
 
-	getnamebyemail, err := s.repo.GetNamebyusername(user.Username)
-	if err == nil && getnamebyemail != nil {
-		return errors.New("username already exits")
-	}
-
 	return s.repo.CreateUser(user)
 }
 

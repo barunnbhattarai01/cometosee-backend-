@@ -120,14 +120,14 @@ func (c *ConnectionController) GetReceivedRequests(w http.ResponseWriter, r *htt
 		return
 	}
 
-	email := common.GetEmail(r.Context())
+	username := common.GetUsername(r.Context())
 
-	if email == "" {
+	if username == "" {
 		http.Error(w, `{"message":"unauthorized user"}`, http.StatusUnauthorized)
 		return
 	}
 
-	data, err := c.service.GetReceivedRequests(email)
+	data, err := c.service.GetReceivedRequests(username)
 	if err != nil {
 		http.Error(w, `{"message":"failed to fetch data"}`, http.StatusInternalServerError)
 		return
@@ -147,15 +147,14 @@ func (c *ConnectionController) GetSentRequests(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	email := common.GetEmail(r.Context())
-	fmt.Print(email)
+	username := common.GetUsername(r.Context())
 
-	if email == "" {
+	if username == "" {
 		http.Error(w, `{"message":"unauthorized user"}`, http.StatusUnauthorized)
 		return
 	}
 
-	data, err := c.service.GetSentRequests(email)
+	data, err := c.service.GetSentRequests(username)
 	if err != nil {
 		http.Error(w, `{"message":"failed to fetch data"}`, http.StatusInternalServerError)
 		return
@@ -219,9 +218,9 @@ func (c *ConnectionController) UserFilteraftersentandblock(w http.ResponseWriter
 func (c *ConnectionController) ConnectedPeople(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	email := common.GetEmail(r.Context())
+	username := common.GetUsername(r.Context())
 
-	result, err := c.service.ConnectedPeople(email)
+	result, err := c.service.ConnectedPeople(username)
 	if err != nil {
 		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
 		return
