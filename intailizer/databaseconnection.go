@@ -28,15 +28,15 @@ func DatabaseConnection() {
 	}
 
 	//connection pooling
-	conn.SetMaxOpenConns(25)                 //maximunnm total conn
-	conn.SetMaxIdleConns(10)                 //maximum idle conn
+	conn.SetMaxOpenConns(10)                 //maximunnm total conn
+	conn.SetMaxIdleConns(5)                  //maximum idle conn
 	conn.SetConnMaxLifetime(5 * time.Minute) //timeee to reusee
 
 	//check ping
 	err := conn.Ping()
 
 	if err != nil {
-		log.Print("failed to conected db ")
+		log.Printf("failed to conected db: %v", err)
 	}
 	fmt.Print("sucessfully connected to db")
 

@@ -46,6 +46,7 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 		AuthID  int    `json:"auth_id"`
 		Caption string `json:"caption"`
 		Image   string `json:"image"`
+		Venue   string `json:"venue"`
 	}
 
 	var body Req
@@ -54,9 +55,9 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 	authId := common.GetAuthid(r.Context())
 	body.AuthID = int(authId)
 
-	id, err := c.service.UploadPost(body.AuthID, body.Caption, body.Image)
+	id, err := c.service.UploadPost(body.AuthID, body.Caption, body.Image, body.Venue)
 	if err != nil {
-		common.WriteJSONError(w, "upload failed", 500)
+		common.WriteJSONError(w, err.Error(), 500)
 		return
 	}
 
@@ -135,7 +136,7 @@ func (c *PostController) FetchFeed(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		common.WriteJSONError(w, "failed", 500)
+		common.WriteJSONError(w, err.Error(), 500)
 		return
 	}
 

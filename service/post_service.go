@@ -19,8 +19,8 @@ func NewPostService(repo *repository.PostRepository) *PostService {
 	}
 }
 
-func (s *PostService) UploadPost(authID int, caption, image string) (int, error) {
-	return s.repo.CreatePOST(authID, caption, image)
+func (s *PostService) UploadPost(authID int, caption, image, venue string) (int, error) {
+	return s.repo.CreatePOST(authID, caption, image, venue)
 }
 
 func (s *PostService) LikePost(postId, authId int) (bool, error) {
@@ -61,7 +61,7 @@ func (s *PostService) FetchFeed(
 		post := post
 		id := post["id"].(int)
 
-		wg.Add(3)
+		wg.Add(4)
 
 		go func() {
 			defer wg.Done()
@@ -98,6 +98,19 @@ func (s *PostService) FetchFeed(
 
 			mu.Lock()
 			post["comments_list"] = commentsList
+			mu.Unlock()
+		}()
+		go func() {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			joinedcount, err := s.repo.CountParticipants(id)
+			if err != nil {
+				return
+			}
+			mu.Lock()
+			post["joinedcount"] = joinedcount
 			mu.Unlock()
 		}()
 	}

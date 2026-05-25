@@ -198,6 +198,7 @@ EXECUTE FUNCTION update_geom_column();
      auth_id INT NOT NULL REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
    caption text not null,
    images_url text ,
+   venue text not null,
    created_at TIMESTAMP DEFAULT NOW()
  );`
 

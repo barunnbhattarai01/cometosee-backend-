@@ -14,14 +14,14 @@ func NewPostRepository() *PostRepository {
 	return &PostRepository{} //this is like constructer in java
 }
 
-func (r *PostRepository) CreatePOST(authID int, caption, imageURL string) (int, error) {
+func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string) (int, error) {
 	var id int
 
 	err := intailizer.DB.QueryRow(`
-		INSERT INTO post (auth_id, caption, images_url)
-		VALUES ($1, $2, $3)
+		INSERT INTO post (auth_id, caption, images_url,venue)
+		VALUES ($1, $2, $3,$4)
 		RETURNING post_id
-	`, authID, caption, imageURL).Scan(&id)
+	`, authID, caption, imageURL, venue).Scan(&id)
 
 	if err != nil {
 		return 0, err
@@ -99,6 +99,7 @@ func (r *PostRepository) FetchFeed(
 			p.caption,
 			p.images_url,
 			a.username,
+			p.venue,
 			u.skill,
 			ps.slot_id,
 			ps.start_time,
@@ -136,7 +137,7 @@ func (r *PostRepository) FetchFeed(
 	for rows.Next() {
 
 		var id int
-		var caption, imageURL, username, userSkill string
+		var caption, imageURL, username, venue, userSkill string
 
 		var slotID *int
 		var startTime, endTime *time.Time
@@ -148,6 +149,7 @@ func (r *PostRepository) FetchFeed(
 			&caption,
 			&imageURL,
 			&username,
+			&venue,
 			&userSkill,
 			&slotID,
 			&startTime,
@@ -167,6 +169,7 @@ func (r *PostRepository) FetchFeed(
 				"caption":  caption,
 				"image":    imageURL,
 				"username": username,
+				"venue":    venue,
 				"skill":    userSkill,
 				"slots":    []map[string]interface{}{},
 			}
@@ -455,4 +458,20 @@ func (r *PostRepository) GetSlotParticipants(slotID int) ([]map[string]interface
 	}
 
 	return users, nil
+}
+
+// need to count all joined participant
+
+func (r *PostRepository) CountPostParticipants(postID int) (int, error) {
+	var count int
+
+	query := `
+	SELECT COUNT(sp.auth_id)
+	FROM post_slots ps
+	LEFT JOIN slot_participants sp ON ps.slot_id = sp.slot_id
+	WHERE ps.post_id = $1;
+	`
+
+	err := intailizer.DB.QueryRow(query, postID).Scan(&count)
+	return count, err
 }
