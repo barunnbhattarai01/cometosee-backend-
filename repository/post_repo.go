@@ -319,7 +319,7 @@ func (r *PostRepository) JoinSlotTx(slotID, authID int) error {
 
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 		}
 	}()
 
@@ -350,7 +350,8 @@ func (r *PostRepository) JoinSlotTx(slotID, authID int) error {
 	}
 
 	if exists {
-		return errors.New("already joined")
+		err = errors.New("already joined")
+		return err
 	}
 
 	// count participant
@@ -364,7 +365,8 @@ func (r *PostRepository) JoinSlotTx(slotID, authID int) error {
 	}
 
 	if current >= max {
-		return errors.New("slot is full")
+		err = errors.New("slot is full")
+		return err
 	}
 
 	// insert
