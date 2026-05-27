@@ -5,6 +5,7 @@ import (
 	"cometosee/model"
 	"cometosee/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -71,18 +72,22 @@ func (c *PostController) LikePost(w http.ResponseWriter, r *http.Request) {
 
 	type Req struct {
 		PostID int `json:"post_id"`
-		AuthID int `json:"auth_id"`
 	}
 
 	var body Req
 	common.ParseJSONBody(r, &body)
 
-	authId := common.GetAuthid(r.Context())
-	body.AuthID = int(authId)
+	if body.PostID <= 0 {
+		common.WriteJSONError(w, "invalid post_id", 400)
+		return
+	}
 
-	liked, err := c.service.LikePost(body.PostID, body.AuthID)
+	authId := common.GetAuthid(r.Context())
+	fmt.Print(authId)
+
+	liked, err := c.service.LikePost(body.PostID, int(authId))
 	if err != nil {
-		common.WriteJSONError(w, "error", 500)
+		common.WriteJSONError(w, err.Error(), 500)
 		return
 	}
 

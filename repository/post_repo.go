@@ -105,7 +105,11 @@ func (r *PostRepository) FetchFeed(
 			ps.start_time,
 			ps.end_time,
 			ps.max_participants,
-			COUNT(sp.auth_id) AS current_participants
+		    (
+    SELECT COUNT(*)
+    FROM slot_participants sp2
+    WHERE sp2.slot_id = ps.slot_id
+) AS current_participants	
 		FROM post p
 		JOIN cometoseeauth a ON p.auth_id = a.auth_id
 		JOIN userdetailinfo u ON u.auth_id = a.auth_id
@@ -423,7 +427,8 @@ func (r *PostRepository) GetSlotParticipants(slotID int) ([]map[string]interface
 		a.auth_id,
 		a.username,
 		u.calling_name,
-		u.avatar
+		u.avatar,
+		sp.joined_at
 	FROM slot_participants sp
 	JOIN cometoseeauth a ON sp.auth_id = a.auth_id
 	LEFT JOIN userdetailinfo u ON a.auth_id = u.auth_id
@@ -441,8 +446,9 @@ func (r *PostRepository) GetSlotParticipants(slotID int) ([]map[string]interface
 	for rows.Next() {
 		var id int
 		var username, callingName, avatar *string
+		var JoinedDate time.Time
 
-		err := rows.Scan(&id, &username, &callingName, &avatar)
+		err := rows.Scan(&id, &username, &callingName, &avatar, &JoinedDate)
 		if err != nil {
 			return nil, err
 		}
@@ -452,6 +458,7 @@ func (r *PostRepository) GetSlotParticipants(slotID int) ([]map[string]interface
 			"username":     username,
 			"calling_name": callingName,
 			"avatar":       avatar,
+			"joined_date":  JoinedDate,
 		}
 
 		users = append(users, user)
@@ -466,7 +473,7 @@ func (r *PostRepository) CountPostParticipants(postID int) (int, error) {
 	var count int
 
 	query := `
-	SELECT COUNT(sp.auth_id)
+	SELECT COUNT(DISTINCT sp.auth_id)
 	FROM post_slots ps
 	LEFT JOIN slot_participants sp ON ps.slot_id = sp.slot_id
 	WHERE ps.post_id = $1;
