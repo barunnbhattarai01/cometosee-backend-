@@ -16,5 +16,5 @@ func PostRoutes(gor *mux.Router, postcontroller *controller.PostController) {
 	//gor.HandleFunc("/latestlike", postcontroller.Latestlikes).Methods("GET")
 	gor.HandleFunc("/createslot", middleware.JwtMiddlware(postcontroller.CreateSlot)).Methods("POST")
 	gor.HandleFunc("/joinslot", middleware.JwtMiddlware(postcontroller.JoinSlot)).Methods("POST")
-	gor.HandleFunc("/slot/participant", postcontroller.GetparticipantsFromslot).Methods("GET")
+	gor.HandleFunc("/slot/participant", middleware.JwtMiddlware(postcontroller.GetparticipantsFromslot)).Methods("GET")
 }

@@ -128,6 +128,6 @@ func (s *PostService) JoinSlot(slotID, authID int) error {
 }
 
 // fetch joined user from slot
-func (s *PostService) GetSlotParticipants(slotID int) ([]map[string]interface{}, error) {
-	return s.repo.GetSlotParticipants(slotID)
+func (s *PostService) GetSlotParticipants(slotID int, authId int) ([]map[string]interface{}, error) {
+	return s.repo.GetSlotParticipants(slotID, authId)
 }

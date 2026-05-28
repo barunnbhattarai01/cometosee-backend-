@@ -5,7 +5,6 @@ import (
 	"cometosee/model"
 	"cometosee/service"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -83,7 +82,6 @@ func (c *PostController) LikePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authId := common.GetAuthid(r.Context())
-	fmt.Print(authId)
 
 	liked, err := c.service.LikePost(body.PostID, int(authId))
 	if err != nil {
@@ -237,6 +235,7 @@ func (c *PostController) GetparticipantsFromslot(w http.ResponseWriter, r *http.
 	}
 
 	slotIDStr := r.URL.Query().Get("slot_id")
+	authId := common.GetAuthid(r.Context())
 
 	slotID, err := strconv.Atoi(slotIDStr)
 	if err != nil {
@@ -244,7 +243,7 @@ func (c *PostController) GetparticipantsFromslot(w http.ResponseWriter, r *http.
 		return
 	}
 
-	users, err := c.service.GetSlotParticipants(slotID)
+	users, err := c.service.GetSlotParticipants(slotID, int(authId))
 	if err != nil {
 		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
 		return

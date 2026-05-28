@@ -5,6 +5,7 @@ import (
 	"cometosee/model"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -423,7 +424,30 @@ func (r *PostRepository) GetComments(postId int) ([]map[string]interface{}, erro
 }
 
 // need to fetch joined user from slot
-func (r *PostRepository) GetSlotParticipants(slotID int) ([]map[string]interface{}, error) {
+func (r *PostRepository) GetSlotParticipants(slotID int, authId int) ([]map[string]interface{}, error) {
+
+	//first need to verify the user is cretaor of post and slot or not
+	var creatorAuthID int
+	var postId int
+	ownerCheck := `
+        SELECT p.auth_id ,p.post_id
+        FROM post_slots s
+        JOIN post p ON s.post_id = p.post_id
+        WHERE s.slot_id = $1
+    `
+	err := intailizer.DB.QueryRow(ownerCheck, slotID).Scan(&creatorAuthID, &postId)
+	if err != nil {
+		//log.Printf("ownerCheck failed: slotID=%d err=%v", slotID, err)
+		return nil, fmt.Errorf("slot not found")
+	}
+
+	//log.Printf("postID=%d creatorAuthID=%d requesterAuthID=%d", postId, creatorAuthID, authId)
+
+	if authId != creatorAuthID {
+		//log.Printf("ownerCheck failed: slotID=%d err=%v", slotID, err)
+		return nil, fmt.Errorf("unauthorized: only the post creator can view participants")
+	}
+
 	query := `
 	SELECT 
 		a.auth_id,
