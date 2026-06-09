@@ -11,6 +11,7 @@ type ConnectionRepository interface {
 	UpdateStatus(userLow, userHigh string, status model.ConnectionStatus) error
 	GetUserConnections(user string) ([]model.Connection, error)
 	UnsendConnection(userLow, userHigh string) error
+	RejectRequest(userLow, userHigh string) error
 	Userfilteraftersentandblock(user1, user2 string) (bool, error)
 	ConnectedPeople(user string) ([]model.UserPublic, error)
 }
@@ -68,6 +69,15 @@ SET status = $1,
 WHERE user_id_1 = $2 AND user_id_2 = $3
 `
 	_, err := intailizer.DB.Exec(query, status, userId1, userId2)
+	return err
+}
+
+func (r *ConnectionRepo) RejectRequest(userId1, userId2 string) error {
+	query := `
+DELETE FROM connectionstable
+WHERE user_id_1 = $1 AND user_id_2 = $2
+`
+	_, err := intailizer.DB.Exec(query, userId1, userId2)
 	return err
 }
 

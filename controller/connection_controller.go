@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type ConnectionController struct {
@@ -37,8 +38,10 @@ func (cc *ConnectionController) SendRequest(w http.ResponseWriter, r *http.Reque
 		common.WriteJSONError(w, "missing users", http.StatusBadRequest)
 		return
 	}
+	req1 := strings.ToLower(req.User1)
+	req2 := strings.ToLower(req.User2)
 
-	err := cc.service.SendRequest(req.User1, req.User2)
+	err := cc.service.SendRequest(req1, req2)
 	if err != nil {
 		common.WriteJSONError(w, err.Error(), http.StatusConflict)
 		return
@@ -230,5 +233,27 @@ func (c *ConnectionController) ConnectedPeople(w http.ResponseWriter, r *http.Re
 		"message": "sucessfully fecthed conneted people",
 		"result":  result,
 	})
+
+}
+
+func (c *ConnectionController) RejectRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		common.WriteJSONError(w, "method not allowed", http.StatusBadRequest)
+		return
+	}
+
+	var req connectionRequest
+	if err := common.ParseJSONBody(r, &req); err != nil {
+		common.WriteJSONError(w, "invalid json", http.StatusBadRequest)
+		return
+
+	}
+	err := c.service.RejectRequest(req.User1, req.User2)
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+
+	}
+	common.WriteJSONMessage(w, "request rejected")
 
 }

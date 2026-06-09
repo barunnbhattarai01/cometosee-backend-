@@ -10,6 +10,7 @@ type ConnectionService interface {
 	SendRequest(user1, user2 string) error
 	AcceptRequest(user1, user2 string) error
 	BlockUser(user1, user2 string) error
+	RejectRequest(user1, user2 string) error
 	GetConnection(user1, user2 string) (*model.Connection, error)
 	GetReceivedRequests(user string) ([]model.Connection, error)
 	GetSentRequests(user string) ([]model.Connection, error)
@@ -27,6 +28,7 @@ func NewConnectionService(r repository.ConnectionRepository) ConnectionService {
 }
 
 func normalizeUsers(user1, user2 string) (userId1, userId2 string) {
+
 	if user1 < user2 {
 		return user1, user2
 	}
@@ -83,6 +85,23 @@ func (s *connectionService) BlockUser(user1, user2 string) error {
 	}
 
 	return s.repo.UpdateStatus(userId1, userId2, model.Blocked)
+}
+
+func (s *connectionService) RejectRequest(user1, user2 string) error {
+	userId1, userId2 := normalizeUsers(user1, user2)
+	conn, err := s.repo.GetConnection(userId1, userId2)
+	if err != nil {
+		return err
+	}
+
+	if conn.Status != model.Pending {
+		return errors.New("only pending requests can be rejected")
+	}
+	if conn.RequestedBy == user1 {
+		return errors.New("cannot reject your own request")
+	}
+
+	return s.repo.RejectRequest(userId1, userId2)
 }
 
 func (s *connectionService) GetConnection(user1, user2 string) (*model.Connection, error) {
