@@ -14,6 +14,7 @@ type ConnectionRepository interface {
 	RejectRequest(userLow, userHigh string) error
 	Userfilteraftersentandblock(user1, user2 string) (bool, error)
 	ConnectedPeople(user string) ([]model.UserPublic, error)
+	DiscoveredPeople(user string) ([]model.UserPublic, error)
 }
 
 type ConnectionRepo struct{}
@@ -148,7 +149,8 @@ func (r *ConnectionRepo) ConnectedPeople(user string) ([]model.UserPublic, error
 	query := `
 SELECT id,user_id_2 
 FROM connectionstable
-WHERE status = 'accepted' AND user_id_1 = $1
+WHERE status = 'accepted' AND 
+(user_id_1 = $1 OR user_id_2 = $1)
 `
 
 	rows, err := intailizer.DB.Query(query, user)
@@ -168,4 +170,41 @@ WHERE status = 'accepted' AND user_id_1 = $1
 	}
 
 	return users, nil
+}
+
+func (r *ConnectionRepo) DiscoveredPeople(user string) ([]model.UserPublic, error) {
+	query := `
+	SELECT u.auth_id, u.username
+FROM cometoseeauth u
+WHERE u.username != $1
+
+AND NOT EXISTS (
+    SELECT 1
+    FROM connectionstable c
+    WHERE (
+        (c.user_id_1 = $1 AND c.user_id_2 = u.username)
+        OR
+        (c.user_id_2 = $1 AND c.user_id_1 = u.username)
+    )
+    AND c.status IN ('pending', 'accepted')
+)
+
+ORDER BY u.auth_id DESC`
+
+	rows, err := intailizer.DB.Query(query, user)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []model.UserPublic
+	for rows.Next() {
+		var u model.UserPublic
+		if err := rows.Scan(&u.ID, &u.Username); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, nil
+
 }

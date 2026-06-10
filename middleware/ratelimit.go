@@ -17,8 +17,8 @@ type client struct {
 var (
 	mu        sync.Mutex
 	clients   = make(map[string]*client)
-	ratelimit = rate.Every(1 * time.Second)
-	burst     = 5
+	ratelimit = rate.Every(10 * time.Second)
+	burst     = 50
 )
 
 func getClients(ip string) *rate.Limiter {

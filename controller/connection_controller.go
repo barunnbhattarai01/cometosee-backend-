@@ -258,3 +258,20 @@ func (c *ConnectionController) RejectRequest(w http.ResponseWriter, r *http.Requ
 	common.WriteJSONMessage(w, "request rejected")
 
 }
+
+func (c *ConnectionController) DiscoveredPeople(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	username := common.GetUsername(r.Context())
+
+	result, err := c.service.DiscoveredPeople(username)
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "sucessfully fecthed discovered people",
+		"result":  result,
+	})
+}

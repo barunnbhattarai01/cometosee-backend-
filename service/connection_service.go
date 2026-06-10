@@ -17,6 +17,7 @@ type ConnectionService interface {
 	UnsendRequest(user1, user2 string) error
 	UserFilteraftersentandblock(user1, user2 string) (bool, string, error)
 	ConnectedPeople(user string) ([]model.UserPublic, error)
+	DiscoveredPeople(user string) ([]model.UserPublic, error)
 }
 
 type connectionService struct {
@@ -186,4 +187,13 @@ func (s *connectionService) ConnectedPeople(user string) ([]model.UserPublic, er
 
 	return result, nil
 
+}
+
+func (s *connectionService) DiscoveredPeople(user string) ([]model.UserPublic, error) {
+	result, err := s.repo.DiscoveredPeople(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
