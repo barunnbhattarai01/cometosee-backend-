@@ -131,7 +131,7 @@ func (r *ConnectionRepo) Userfilteraftersentandblock(user1, user2 string) (bool,
 SELECT COUNT(*)
 FROM connectionstable
 WHERE (user_id_1 = $1 AND user_id_2 = $2) OR (user_id_1 = $2 AND user_id_2 = $1)
-AND status IN ('pending', 'blocked')
+AND status IN ('pending', 'blocked','accepted')
 `
 	row := intailizer.DB.QueryRow(query, user1, user2)
 	var count int

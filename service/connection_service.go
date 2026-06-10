@@ -15,7 +15,7 @@ type ConnectionService interface {
 	GetReceivedRequests(user string) ([]model.Connection, error)
 	GetSentRequests(user string) ([]model.Connection, error)
 	UnsendRequest(user1, user2 string) error
-	UserFilteraftersentandblock(user1, user2 string) (bool, error)
+	UserFilteraftersentandblock(user1, user2 string) (bool, string, error)
 	ConnectedPeople(user string) ([]model.UserPublic, error)
 }
 
@@ -159,18 +159,22 @@ func (s *connectionService) UnsendRequest(user1, user2 string) error {
 	return s.repo.UnsendConnection(userId1, userId2)
 }
 
-func (s *connectionService) UserFilteraftersentandblock(user1, user2 string) (bool, error) {
+func (s *connectionService) UserFilteraftersentandblock(user1, user2 string) (bool, string, error) {
 	userId1, userId2 := normalizeUsers(user1, user2)
 	conn, err := s.repo.GetConnection(userId1, userId2)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
-	if conn.Status == model.Pending || conn.Status == model.Blocked {
-		return true, nil
+	if conn.Status == model.Pending || conn.Status == model.Blocked || conn.Status == model.Accepted {
+		return true, string(conn.Status), nil
+	}
+	ok, err := s.repo.Userfilteraftersentandblock(userId1, userId2)
+	if err != nil {
+		return false, "", err
 	}
 
-	return s.repo.Userfilteraftersentandblock(userId1, userId2)
+	return ok, string(conn.Status), nil
 }
 
 // need to fetch comnected user

@@ -207,7 +207,7 @@ func (c *ConnectionController) UserFilteraftersentandblock(w http.ResponseWriter
 		http.Error(w, `{"message":"invalid json"}`, http.StatusBadRequest)
 		return
 	}
-	result, err := c.service.UserFilteraftersentandblock(req.User1, req.User2)
+	result, status, err := c.service.UserFilteraftersentandblock(req.User1, req.User2)
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"message":"%s"}`, err.Error()), http.StatusBadRequest)
 		return
@@ -215,6 +215,7 @@ func (c *ConnectionController) UserFilteraftersentandblock(w http.ResponseWriter
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "filter check completed",
 		"result":  result,
+		"status":  status,
 	})
 }
 
