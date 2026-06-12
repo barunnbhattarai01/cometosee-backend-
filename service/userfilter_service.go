@@ -1,9 +1,12 @@
 package service
 
-import "cometosee/repository"
+import (
+	"cometosee/model"
+	"cometosee/repository"
+)
 
 type UserFilterService interface {
-	FilterUsersByName() ([]string, error)
+	FilterUsersByName() ([]model.Auth, error)
 }
 
 type userFilterService struct {
@@ -14,6 +17,6 @@ func NewUserFilterService(repo repository.UserFilterRepository) UserFilterServic
 	return &userFilterService{repo: repo}
 }
 
-func (s *userFilterService) FilterUsersByName() ([]string, error) {
+func (s *userFilterService) FilterUsersByName() ([]model.Auth, error) {
 	return s.repo.FilterUsersByName()
 }
