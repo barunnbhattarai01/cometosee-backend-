@@ -101,6 +101,8 @@ func (r *PostRepository) FetchFeed(
 			p.images_url,
 			a.username,
 			p.venue,
+			l.longitude,
+			l.latitude,
 			u.skill,
 			ps.slot_id,
 			ps.start_time,
@@ -124,10 +126,7 @@ func (r *PostRepository) FetchFeed(
 			ST_MakePoint($2, $3)::geography,
 			$4
 		)
-		GROUP BY 
-			p.post_id, p.caption, p.images_url,
-			a.username, u.skill,
-			ps.slot_id, ps.start_time, ps.end_time, ps.max_participants
+
 		ORDER BY p.created_at DESC
 	`, skill, lon, lat, radius)
 
@@ -143,6 +142,7 @@ func (r *PostRepository) FetchFeed(
 
 		var id int
 		var caption, imageURL, username, venue, userSkill string
+		var longitude, latitude float64
 
 		var slotID *int
 		var startTime, endTime *time.Time
@@ -155,6 +155,8 @@ func (r *PostRepository) FetchFeed(
 			&imageURL,
 			&username,
 			&venue,
+			&longitude,
+			&latitude,
 			&userSkill,
 			&slotID,
 			&startTime,
@@ -170,13 +172,15 @@ func (r *PostRepository) FetchFeed(
 		//  create post if not exists
 		if _, exists := postMap[id]; !exists {
 			postMap[id] = map[string]interface{}{
-				"id":       id,
-				"caption":  caption,
-				"image":    imageURL,
-				"username": username,
-				"venue":    venue,
-				"skill":    userSkill,
-				"slots":    []map[string]interface{}{},
+				"id":        id,
+				"caption":   caption,
+				"image":     imageURL,
+				"username":  username,
+				"venue":     venue,
+				"skill":     userSkill,
+				"longitude": longitude,
+				"latitude":  latitude,
+				"slots":     []map[string]interface{}{},
 			}
 		}
 
