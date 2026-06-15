@@ -147,7 +147,11 @@ AND status IN ('pending', 'blocked','accepted')
 
 func (r *ConnectionRepo) ConnectedPeople(user string) ([]model.UserPublic, error) {
 	query := `
-SELECT id,user_id_2 
+SELECT id,
+CASE 
+        WHEN user_id_1 = $1 THEN user_id_2
+        ELSE user_id_1
+    END AS other_user 
 FROM connectionstable
 WHERE status = 'accepted' AND 
 (user_id_1 = $1 OR user_id_2 = $1)

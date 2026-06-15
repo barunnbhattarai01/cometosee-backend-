@@ -91,7 +91,7 @@ func (r *PostRepository) FetchFeed(
 	lat float64,
 	lon float64,
 	radius int,
-	skill string,
+	sport string,
 ) ([]map[string]interface{}, error) {
 
 	rows, err := intailizer.DB.QueryContext(ctx, `
@@ -103,7 +103,7 @@ func (r *PostRepository) FetchFeed(
 			p.venue,
 			l.longitude,
 			l.latitude,
-			u.skill,
+			u.sport,
 			ps.slot_id,
 			ps.start_time,
 			ps.end_time,
@@ -120,7 +120,7 @@ func (r *PostRepository) FetchFeed(
 		LEFT JOIN post_slots ps ON ps.post_id = p.post_id
 		LEFT JOIN slot_participants sp ON sp.slot_id = ps.slot_id
 		WHERE 
-			u.skill = $1
+			u.sport = $1
 		AND ST_DWithin(
 			l.geom,
 			ST_MakePoint($2, $3)::geography,
@@ -128,7 +128,7 @@ func (r *PostRepository) FetchFeed(
 		)
 
 		ORDER BY p.created_at DESC
-	`, skill, lon, lat, radius)
+	`, sport, lon, lat, radius)
 
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (r *PostRepository) FetchFeed(
 	for rows.Next() {
 
 		var id int
-		var caption, imageURL, username, venue, userSkill string
+		var caption, imageURL, username, venue, userSport string
 		var longitude, latitude float64
 
 		var slotID *int
@@ -157,7 +157,7 @@ func (r *PostRepository) FetchFeed(
 			&venue,
 			&longitude,
 			&latitude,
-			&userSkill,
+			&userSport,
 			&slotID,
 			&startTime,
 			&endTime,
@@ -177,7 +177,7 @@ func (r *PostRepository) FetchFeed(
 				"image":     imageURL,
 				"username":  username,
 				"venue":     venue,
-				"skill":     userSkill,
+				"sport":     userSport,
 				"longitude": longitude,
 				"latitude":  latitude,
 				"slots":     []map[string]interface{}{},
@@ -235,17 +235,17 @@ func (r *PostRepository) ShareCount(postId int) int {
 	return count
 }
 
-// get skill by authid
-func (r *PostRepository) GetUserSkill(authId int) (string, error) {
-	var skill string
+// get sport by authid
+func (r *PostRepository) GetUserSport(authId int) (string, error) {
+	var sport string
 
 	err := intailizer.DB.QueryRow(`
-		SELECT skill 
+		SELECT sport 
 		FROM userdetailinfo 
 		WHERE auth_id = $1
-	`, authId).Scan(&skill)
+	`, authId).Scan(&sport)
 
-	return skill, err
+	return sport, err
 }
 
 // slot

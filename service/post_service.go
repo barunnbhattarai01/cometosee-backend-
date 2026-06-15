@@ -43,12 +43,12 @@ func (s *PostService) FetchFeed(
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	skill, err := s.repo.GetUserSkill(authId)
+	sport, err := s.repo.GetUserSport(authId)
 	if err != nil {
 		return nil, err
 	}
 
-	posts, err := s.repo.FetchFeed(ctx, lat, lon, radius, skill)
+	posts, err := s.repo.FetchFeed(ctx, lat, lon, radius, sport)
 	if err != nil {
 		return nil, err
 	}
