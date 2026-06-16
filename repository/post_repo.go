@@ -95,40 +95,48 @@ func (r *PostRepository) FetchFeed(
 ) ([]map[string]interface{}, error) {
 
 	rows, err := intailizer.DB.QueryContext(ctx, `
-		SELECT 
-			p.post_id,
-			p.caption,
-			p.images_url,
-			a.username,
-			p.venue,
-			l.longitude,
-			l.latitude,
-			u.sport,
-			ps.slot_id,
-			ps.start_time,
-			ps.end_time,
-			ps.max_participants,
-		    (
-    SELECT COUNT(*)
-    FROM slot_participants sp2
-    WHERE sp2.slot_id = ps.slot_id
-) AS current_participants	
-		FROM post p
-		JOIN cometoseeauth a ON p.auth_id = a.auth_id
-		JOIN userdetailinfo u ON u.auth_id = a.auth_id
-		JOIN location l ON l.user_detail_id = u.user_detail_id
-		LEFT JOIN post_slots ps ON ps.post_id = p.post_id
-		LEFT JOIN slot_participants sp ON sp.slot_id = ps.slot_id
-		WHERE 
-			u.sport = $1
-		AND ST_DWithin(
-			l.geom,
-			ST_MakePoint($2, $3)::geography,
-			$4
-		)
-
-		ORDER BY p.created_at DESC
-	`, sport, lon, lat, radius)
+    SELECT 
+        p.post_id,
+        p.caption,
+        p.images_url,
+        a.username,
+        p.venue,
+        l.longitude,
+        l.latitude,
+        u.sport,
+        ps.slot_id,
+        ps.start_time,
+        ps.end_time,
+        ps.max_participants,
+        (
+            SELECT COUNT(*)
+            FROM slot_participants sp2
+            WHERE sp2.slot_id = ps.slot_id
+        ) AS current_participants
+    FROM post p
+    JOIN cometoseeauth a ON p.auth_id = a.auth_id
+    JOIN userdetailinfo u ON u.auth_id = a.auth_id
+    JOIN (
+        SELECT DISTINCT ON (user_detail_id)
+            user_detail_id, longitude, latitude, geom
+        FROM location
+        ORDER BY user_detail_id
+    ) l ON l.user_detail_id = u.user_detail_id
+    LEFT JOIN (
+        SELECT DISTINCT ON (slot_id)
+            slot_id, post_id, start_time, end_time, max_participants
+        FROM post_slots
+        ORDER BY slot_id
+    ) ps ON ps.post_id = p.post_id
+    WHERE 
+        u.sport = $1
+    AND ST_DWithin(
+        l.geom,
+        ST_MakePoint($2, $3)::geography,
+        $4
+    )
+    ORDER BY p.created_at DESC
+`, sport, lon, lat, radius)
 
 	if err != nil {
 		return nil, err
