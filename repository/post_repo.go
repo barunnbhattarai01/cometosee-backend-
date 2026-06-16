@@ -520,3 +520,19 @@ func (r *PostRepository) CountPostParticipants(postID int) (int, error) {
 	err := intailizer.DB.QueryRow(query, postID).Scan(&count)
 	return count, err
 }
+
+func (r *PostRepository) Islike(postId, authId int) (bool, error) {
+
+	var exists bool
+	err := intailizer.DB.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM post_likes
+			WHERE post_id=$1 AND auth_id=$2
+		)
+	`, postId, authId).Scan(&exists)
+
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
