@@ -21,38 +21,39 @@ func (r *MapRepository) MapEventPin(
 ) ([]map[string]interface{}, error) {
 
 	rows, err := intailizer.DB.QueryContext(ctx, `
-		SELECT
-			p.post_id,
-			p.caption,
-			COALESCE(p.images_url, '') AS images_url,
-			a.username,
-			p.venue,
-			l.longitude,
-			l.latitude,
-			u.skill,
-			ps.slot_id,
-			ps.start_time,
-			ps.end_time,
-			ps.max_participants,
-			(
-				SELECT COUNT(*)
-				FROM slot_participants sp2
-				WHERE sp2.slot_id = ps.slot_id
-			) AS current_participants
-		FROM post p
-		JOIN cometoseeauth  a  ON p.auth_id        = a.auth_id
-		JOIN userdetailinfo u  ON u.auth_id         = a.auth_id
-		JOIN location       l  ON l.user_detail_id  = u.user_detail_id
-		JOIN post_slots     ps ON ps.post_id         = p.post_id
-		WHERE
-			ST_DWithin(
-				l.geom,
-				ST_MakePoint($2, $1)::geography,
-				$3
-			)
-			AND ($4 = '' OR u.skill = $4)
-		ORDER BY p.created_at DESC, ps.start_time ASC
-	`, lat, lon, radius, skill)
+    SELECT
+        p.post_id,
+        p.caption,
+        COALESCE(p.images_url, '') AS images_url,
+        a.username,
+        p.venue,
+        p.longitude,
+        p.latitude,
+        u.skill,
+        ps.slot_id,
+        ps.start_time,
+        ps.end_time,
+        ps.max_participants,
+        (
+            SELECT COUNT(*)
+            FROM slot_participants sp2
+            WHERE sp2.slot_id = ps.slot_id
+        ) AS current_participants
+    FROM post p
+    JOIN cometoseeauth  a  ON p.auth_id  = a.auth_id
+    JOIN userdetailinfo u  ON u.auth_id  = a.auth_id
+    JOIN post_slots     ps ON ps.post_id = p.post_id
+    WHERE
+        p.latitude IS NOT NULL
+        AND p.longitude IS NOT NULL
+        AND ST_DWithin(
+            ST_MakePoint(p.longitude, p.latitude)::geography,
+            ST_MakePoint($2, $1)::geography,
+            $3
+        )
+        AND ($4 = '' OR u.skill = $4)
+    ORDER BY p.created_at DESC, ps.start_time ASC
+`, lat, lon, radius, skill)
 
 	if err != nil {
 		return nil, err

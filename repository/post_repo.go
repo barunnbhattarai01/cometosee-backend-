@@ -16,13 +16,25 @@ func NewPostRepository() *PostRepository {
 }
 
 func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string) (int, error) {
+	//get user location
+	var lat, lon float64
+	err := intailizer.DB.QueryRow(`
+		SELECT l.latitude, l.longitude
+		FROM location l
+		JOIN userdetailinfo u ON u.user_detail_id = l.user_detail_id
+		WHERE u.auth_id = $1
+	`, authID).Scan(&lat, &lon)
+	if err != nil {
+		return 0, fmt.Errorf("user location not found: %v", err)
+	}
+
 	var id int
 
-	err := intailizer.DB.QueryRow(`
-		INSERT INTO post (auth_id, caption, images_url,venue)
-		VALUES ($1, $2, $3,$4)
+	err = intailizer.DB.QueryRow(`
+		INSERT INTO post (auth_id, caption, images_url,venue,longitude,latitude)
+		VALUES ($1, $2, $3,$4,$5,$6)
 		RETURNING post_id
-	`, authID, caption, imageURL, venue).Scan(&id)
+	`, authID, caption, imageURL, venue, lon, lat).Scan(&id)
 
 	if err != nil {
 		return 0, err

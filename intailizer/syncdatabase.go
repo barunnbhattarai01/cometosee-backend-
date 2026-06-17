@@ -199,6 +199,8 @@ EXECUTE FUNCTION update_geom_column();
    caption text not null,
    images_url text ,
    venue text not null,
+   longitude double precision not null,
+   latitude double precision not null,
    created_at TIMESTAMP DEFAULT NOW()
  );`
 
