@@ -18,12 +18,13 @@ func NewPostRepository() *PostRepository {
 func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string) (int, error) {
 	//get user location
 	var lat, lon float64
+	var sport string
 	err := intailizer.DB.QueryRow(`
-		SELECT l.latitude, l.longitude
+		SELECT l.latitude, l.longitude,u.sport
 		FROM location l
 		JOIN userdetailinfo u ON u.user_detail_id = l.user_detail_id
 		WHERE u.auth_id = $1
-	`, authID).Scan(&lat, &lon)
+	`, authID).Scan(&lat, &lon, &sport)
 	if err != nil {
 		return 0, fmt.Errorf("user location not found: %v", err)
 	}
@@ -31,10 +32,10 @@ func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string)
 	var id int
 
 	err = intailizer.DB.QueryRow(`
-		INSERT INTO post (auth_id, caption, images_url,venue,longitude,latitude)
-		VALUES ($1, $2, $3,$4,$5,$6)
+		INSERT INTO post (auth_id, caption, images_url,venue,longitude,latitude,sport)
+		VALUES ($1, $2, $3,$4,$5,$6,$7)
 		RETURNING post_id
-	`, authID, caption, imageURL, venue, lon, lat).Scan(&id)
+	`, authID, caption, imageURL, venue, lon, lat, sport).Scan(&id)
 
 	if err != nil {
 		return 0, err
@@ -107,15 +108,15 @@ func (r *PostRepository) FetchFeed(
 ) ([]map[string]interface{}, error) {
 
 	rows, err := intailizer.DB.QueryContext(ctx, `
-    SELECT 
+    SELECT
         p.post_id,
         p.caption,
-        p.images_url,
+        COALESCE(p.images_url, '') AS images_url,
         a.username,
         p.venue,
-        l.longitude,
-        l.latitude,
-        u.sport,
+        p.longitude,
+        p.latitude,
+        p.sport,
         ps.slot_id,
         ps.start_time,
         ps.end_time,
@@ -127,26 +128,21 @@ func (r *PostRepository) FetchFeed(
         ) AS current_participants
     FROM post p
     JOIN cometoseeauth a ON p.auth_id = a.auth_id
-    JOIN userdetailinfo u ON u.auth_id = a.auth_id
-    JOIN (
-        SELECT DISTINCT ON (user_detail_id)
-            user_detail_id, longitude, latitude, geom
-        FROM location
-        ORDER BY user_detail_id
-    ) l ON l.user_detail_id = u.user_detail_id
     LEFT JOIN (
         SELECT DISTINCT ON (slot_id)
             slot_id, post_id, start_time, end_time, max_participants
         FROM post_slots
         ORDER BY slot_id
     ) ps ON ps.post_id = p.post_id
-    WHERE 
-        u.sport = $1
-    AND ST_DWithin(
-        l.geom,
-        ST_MakePoint($2, $3)::geography,
-        $4
-    )
+    WHERE
+        p.sport = $1
+        AND p.latitude IS NOT NULL
+        AND p.longitude IS NOT NULL
+        AND ST_DWithin(
+            ST_MakePoint(p.longitude, p.latitude)::geography,
+            ST_MakePoint($2, $3)::geography,
+            $4
+        )
     ORDER BY p.created_at DESC
 `, sport, lon, lat, radius)
 

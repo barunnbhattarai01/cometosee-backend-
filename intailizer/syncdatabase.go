@@ -201,6 +201,7 @@ EXECUTE FUNCTION update_geom_column();
    venue text not null,
    longitude double precision not null,
    latitude double precision not null,
+   sport text not null,
    created_at TIMESTAMP DEFAULT NOW()
  );`
 

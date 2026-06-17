@@ -17,7 +17,7 @@ func (r *MapRepository) MapEventPin(
 	lat float64,
 	lon float64,
 	radius int,
-	skill string,
+	sport string,
 ) ([]map[string]interface{}, error) {
 
 	rows, err := intailizer.DB.QueryContext(ctx, `
@@ -29,7 +29,7 @@ func (r *MapRepository) MapEventPin(
         p.venue,
         p.longitude,
         p.latitude,
-        u.skill,
+        p.sport,
         ps.slot_id,
         ps.start_time,
         ps.end_time,
@@ -40,20 +40,19 @@ func (r *MapRepository) MapEventPin(
             WHERE sp2.slot_id = ps.slot_id
         ) AS current_participants
     FROM post p
-    JOIN cometoseeauth  a  ON p.auth_id  = a.auth_id
-    JOIN userdetailinfo u  ON u.auth_id  = a.auth_id
-    JOIN post_slots     ps ON ps.post_id = p.post_id
+    JOIN cometoseeauth a ON p.auth_id = a.auth_id
+    JOIN post_slots ps ON ps.post_id = p.post_id
     WHERE
         p.latitude IS NOT NULL
         AND p.longitude IS NOT NULL
+        AND p.sport = $4
         AND ST_DWithin(
             ST_MakePoint(p.longitude, p.latitude)::geography,
             ST_MakePoint($2, $1)::geography,
             $3
         )
-        AND ($4 = '' OR u.skill = $4)
     ORDER BY p.created_at DESC, ps.start_time ASC
-`, lat, lon, radius, skill)
+`, lat, lon, radius, sport)
 
 	if err != nil {
 		return nil, err
@@ -66,7 +65,7 @@ func (r *MapRepository) MapEventPin(
 
 	for rows.Next() {
 		var id int
-		var caption, imageURL, username, venue, userSkill string
+		var caption, imageURL, username, venue, userSport string
 		var longitude, latitude float64
 		var slotID *int
 		var startTime, endTime *time.Time
@@ -81,7 +80,7 @@ func (r *MapRepository) MapEventPin(
 			&venue,
 			&longitude,
 			&latitude,
-			&userSkill,
+			&userSport,
 			&slotID,
 			&startTime,
 			&endTime,
@@ -99,7 +98,7 @@ func (r *MapRepository) MapEventPin(
 				"image":     imageURL,
 				"username":  username,
 				"venue":     venue,
-				"skill":     userSkill,
+				"sport":     userSport,
 				"longitude": longitude,
 				"latitude":  latitude,
 				"slots":     []map[string]interface{}{},
