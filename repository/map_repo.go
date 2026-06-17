@@ -138,3 +138,15 @@ func (r *MapRepository) MapEventPin(
 
 	return posts, nil
 }
+
+func (r *MapRepository) GetUserSport(authId int) (string, error) {
+	var sport string
+
+	err := intailizer.DB.QueryRow(`
+		SELECT sport 
+		FROM userdetailinfo 
+		WHERE auth_id = $1
+	`, authId).Scan(&sport)
+
+	return sport, err
+}

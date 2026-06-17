@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"cometosee/common"
 	"cometosee/service"
 	"encoding/json"
 	"net/http"
@@ -54,11 +55,11 @@ func (c *MapController) GetMapEventPins(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	skill := q.Get("skill")
+	authId := common.GetAuthid(r.Context())
 
-	pins, err := c.mapService.GetMapEventPins(r.Context(), lat, lon, radius, skill)
+	pins, err := c.mapService.GetMapEventPins(r.Context(), lat, lon, radius, int(authId))
 	if err != nil {
-		http.Error(w, "failed to fetch map pins", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

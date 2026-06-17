@@ -17,12 +17,17 @@ func (s *MapService) GetMapEventPins(
 	ctx context.Context,
 	lat, lon float64,
 	radius int,
-	skill string,
+	authid int,
 ) ([]map[string]interface{}, error) {
 
 	if radius <= 0 {
 		radius = 10000
 	}
 
-	return s.mapRepo.MapEventPin(ctx, lat, lon, radius, skill)
+	sport, err := s.mapRepo.GetUserSport(authid)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapRepo.MapEventPin(ctx, lat, lon, radius, sport)
 }
