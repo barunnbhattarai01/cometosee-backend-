@@ -61,7 +61,7 @@ func (s *PostService) FetchFeed(
 		post := post
 		id := post["id"].(int)
 
-		wg.Add(4)
+		wg.Add(5)
 
 		go func() {
 			defer wg.Done()
@@ -112,6 +112,20 @@ func (s *PostService) FetchFeed(
 
 			mu.Lock()
 			post["is_liked"] = isLiked
+			mu.Unlock()
+		}()
+		go func() {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			isJoinedSlot, err := s.repo.IsJoinedSlot(id, authId)
+			if err != nil {
+				return
+			}
+
+			mu.Lock()
+			post["is_joined"] = isJoinedSlot
 			mu.Unlock()
 		}()
 	}

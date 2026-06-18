@@ -544,3 +544,22 @@ func (r *PostRepository) Islike(postId, authId int) (bool, error) {
 	}
 	return exists, nil
 }
+
+func (r *PostRepository) IsJoinedSlot(postId, authId int) (bool, error) {
+	var exists bool
+
+	err := intailizer.DB.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1
+			FROM post_slots ps
+			JOIN slot_participants sp ON ps.slot_id = sp.slot_id
+			WHERE ps.post_id = $1 AND sp.auth_id = $2
+		)
+	`, postId, authId).Scan(&exists)
+
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
