@@ -563,3 +563,54 @@ func (r *PostRepository) IsJoinedSlot(postId, authId int) (bool, error) {
 
 	return exists, nil
 }
+
+func (r *PostRepository) GetUsersWhoLikedMyPosts(authId int) ([]map[string]interface{}, error) {
+
+	rows, err := intailizer.DB.Query(`
+		SELECT DISTINCT ON (a.auth_id, p.post_id)
+			a.auth_id,
+			a.username,
+			u.avatar,
+			p.post_id,
+			p.caption,
+			pl.like_id
+		FROM post p
+		JOIN post_likes pl ON p.post_id = pl.post_id
+		JOIN cometoseeauth a ON a.auth_id = pl.auth_id
+		LEFT JOIN userdetailinfo u ON u.auth_id = a.auth_id
+		WHERE p.auth_id = $1
+		ORDER BY a.auth_id, p.post_id, pl.like_id DESC;
+	`, authId)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []map[string]interface{}
+
+	for rows.Next() {
+
+		var id int
+		var username string
+		var avatar *string
+		var postID int
+		var postcaption string
+		var likeID int
+
+		if err := rows.Scan(&id, &username, &avatar, &postID, &postcaption, &likeID); err != nil {
+			return nil, err
+		}
+
+		users = append(users, map[string]interface{}{
+			"auth_id":      id,
+			"username":     username,
+			"avatar":       avatar,
+			"post_id":      postID,
+			"post_caption": postcaption,
+			"like_id":      likeID,
+		})
+	}
+
+	return users, nil
+}

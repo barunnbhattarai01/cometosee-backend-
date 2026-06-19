@@ -159,3 +159,7 @@ func (s *PostService) JoinSlot(slotID, authID int) error {
 func (s *PostService) GetSlotParticipants(slotID int, authId int) ([]map[string]interface{}, error) {
 	return s.repo.GetSlotParticipants(slotID, authId)
 }
+
+func (s *PostService) GetUserWhoLikedMyPost(authId int) ([]map[string]interface{}, error) {
+	return s.repo.GetUsersWhoLikedMyPosts(authId)
+}

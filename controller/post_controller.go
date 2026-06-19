@@ -254,3 +254,24 @@ func (c *PostController) GetparticipantsFromslot(w http.ResponseWriter, r *http.
 		"user":    users,
 	})
 }
+
+func (c *PostController) LatestLike(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		common.WriteJSONMessage(w, "invalid methods")
+	}
+
+	authId := common.GetAuthid(r.Context())
+
+	users, err := c.service.GetUserWhoLikedMyPost(int(authId))
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "sucessfully fetch latest like",
+		"user":    users,
+	})
+}
