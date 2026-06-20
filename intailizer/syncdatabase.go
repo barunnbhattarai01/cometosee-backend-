@@ -44,12 +44,15 @@ func Syncdatabase() {
 	}
 
 	subscritiontable := `
-create table if not exists subscriptiontable(
-id serial primary key,
-	user_email text not null,
-	start_date timestamp not null default now(),
-	end_date timestamp
-)
+     create table if not exists subscriptiontable(
+    id serial primary key,
+    auth_id int not null references cometoseeauth(auth_id) on delete cascade,
+    plan text not null default 'standard',
+    status text not null default 'active', 
+    start_date timestamp not null default now(),
+    end_date timestamp not null,
+    unique(auth_id)  
+);
 	`
 
 	_, err = DB.Exec(subscritiontable)
@@ -59,12 +62,15 @@ id serial primary key,
 	}
 
 	paymenttable := `
-create table if not exists paymenttable(
-id serial primary key,
-	user_email text not null,
-	amount decimal(10, 2) not null,
-	payment_date timestamp not null default now()
-)
+	create table if not exists paymenttable(
+ id serial primary key,
+    auth_id int not null references cometoseeauth(auth_id) on delete cascade,
+    transaction_uuid text not null unique,  
+    amount decimal(10,2) not null,
+	plan text not null,
+    status text not null default 'pending', 
+    payment_date timestamp not null default now()
+);
 	`
 
 	_, err = DB.Exec(paymenttable)

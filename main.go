@@ -2,7 +2,6 @@ package main
 
 import (
 	"cometosee/config"
-	"cometosee/controller"
 	"cometosee/di"
 	"cometosee/firebase"
 	"cometosee/intailizer"
@@ -73,7 +72,8 @@ func main() {
 	postcontroller := di.SetupPostController()
 	wscontroller := di.SetupMessage()
 	userfilterctrl := di.UserfilterDI()
-	subcriptiondi := di.SubcribntionDi()
+	subcriptiondi := di.SetupSubscriptionController()
+	paymentdi := di.SetupPaymentController()
 	connectiondi := di.SetupConnectionController()
 	agoradi, _ := di.SetupAgoraDI()
 	userdetailinfodi := di.InitializeUserDetailInfo()
@@ -90,9 +90,7 @@ func main() {
 	routes.InitializeUserDetailInfoRoutes(gor, userdetailinfodi)
 	routes.Discoveryroutes(gor, discoverydi)
 	routes.Maproutes(gor, mapdi)
-	gor.HandleFunc("/esewa/initiate", controller.InitiateHandler).Methods("POST")
-	gor.HandleFunc("/esewa/verify", controller.VerifyHandler).Methods("GET")
-	gor.HandleFunc("/esewa/failure", controller.FailureHandler).Methods("GET")
+	routes.PaymentRoutes(gor, paymentdi)
 	//promethheus mertics
 	//had to put it on differenr server for standard code
 	go func() {

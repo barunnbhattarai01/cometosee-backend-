@@ -1,15 +1,17 @@
 package service
 
 import (
-	"cometosee/repository"
+	"errors"
 	"time"
+
+	"cometosee/repository"
 )
 
 type SubscriptionService interface {
-	SubscribeUser(email string) error
-	UnsubscribeUser(email string) error
-	GetSubscriptionStatus(email string) bool
-	UpdateSubscriptionEndDate(email string) error
+	SubscribeUser(authID int, plan string) error
+	UnsubscribeUser(authID int) error
+	GetSubscriptionStatus(authID int) (bool, error)
+	ExtendSubscription(authID int, plan string) error
 }
 
 type subscriptionService struct {
@@ -20,70 +22,66 @@ func NewSubscriptionService(repo repository.SubscriptionRepository) Subscription
 	return &subscriptionService{repo: repo}
 }
 
-func (s *subscriptionService) SubscribeUser(email string) error {
-	//subcription logic
-	if email == "" {
-		return nil
+var planDurations = map[string]time.Duration{
+	"monthly": 30 * 24 * time.Hour,
+	"yearly":  365 * 24 * time.Hour,
+}
+
+// helper to determine the duratuins
+func durationForPlan(plan string) (time.Duration, error) {
+	d, ok := planDurations[plan]
+	if !ok {
+		return 0, errors.New("unknown plan: " + plan)
 	}
+	return d, nil
+}
 
-	err := s.repo.CreateSubscription(email, time.Now(), time.Now().AddDate(0, 1, 0))
-
+func (s *subscriptionService) SubscribeUser(authID int, plan string) error {
+	if authID == 0 {
+		return errors.New("authID is required")
+	}
+	duration, err := durationForPlan(plan)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return s.repo.CreateSubscription(authID, plan, duration)
 }
 
-func (s *subscriptionService) UnsubscribeUser(email string) error {
-	if email == "" {
-		return nil
+func (s *subscriptionService) UnsubscribeUser(authID int) error {
+	if authID == 0 {
+		return errors.New("authID is required")
 	}
+	return s.repo.CancelSubscription(authID)
+}
 
-	err := s.repo.DeleteSubscription(email)
+func (s *subscriptionService) GetSubscriptionStatus(authID int) (bool, error) {
+	if authID == 0 {
+		return false, errors.New("authID is required")
+	}
+	sub, err := s.repo.GetSubscriptionByAuthID(authID)
+	if err != nil {
+		return false, err
+	}
+	if sub == nil {
+		return false, nil
+	}
+	if sub.Status != "active" {
+		return false, nil
+	}
+	if sub.EndDate.Before(time.Now()) {
+		return false, nil
+	}
+	return true, nil
+}
 
+func (s *subscriptionService) ExtendSubscription(authID int, plan string) error {
+	if authID == 0 {
+		return errors.New("authID is required")
+	}
+	duration, err := durationForPlan(plan)
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func (s *subscriptionService) GetSubscriptionStatus(email string) bool {
-	if email == "" {
-		return false
-	}
-
-	subscription, err := s.repo.GetSubscriptionByEmail(email)
-
-	if err != nil {
-		return false
-	}
-
-	//comaprsion of date
-	if !subscription.EndDate.IsZero() {
-		//check if end date is before current date
-		layout := "2006-01-02"
-		endDate, err := time.Parse(layout, subscription.EndDate.Format(layout))
-		if err != nil {
-			return false
-		}
-		if endDate.Before(time.Now()) {
-			return false
-		}
-
-	}
-
-	return true
-}
-
-func (s *subscriptionService) UpdateSubscriptionEndDate(email string) error {
-	if email == "" {
-		return nil
-	}
-	err := s.repo.UpdateSubscriptionEndDate(email)
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.repo.ExtendSubscription(authID, plan, duration)
 }

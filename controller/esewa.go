@@ -2,16 +2,11 @@ package controller
 
 import (
 	"cometosee/model"
-	"cometosee/repository"
-	"cometosee/service"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/mukezhz/pay-np/errorz"
-	"github.com/mukezhz/pay-np/esewa"
 	"github.com/mukezhz/pay-np/utils"
 )
 
@@ -118,69 +113,4 @@ func (e *EsewaClient) VerifySignature(data string) error {
 	}
 
 	return nil
-}
-
-// helper fucntion
-func InitiateHandler(w http.ResponseWriter, r *http.Request) {
-	payload := &esewa.EsewaPayload{
-		Amount:                "100",
-		TaxAmount:             "0",
-		ProductServiceCharge:  "0",
-		ProductDeliveryCharge: "0",
-		ProductCode:           "EPAYTEST", // eSewa sandbox merchant code
-		TotalAmount:           "100",
-		TransactionUUID:       uuid.New().String(),
-		SuccessURL:            "http://localhost:8081/esewa/verify",
-		FailureURL:            "http://localhost:8081/esewa/failure",
-		SignedFieldNames:      "total_amount,transaction_uuid,product_code",
-	}
-
-	client, err := esewa.New("8gBm/:&EnhH.1/q", payload) // sandbox secret
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	sig, err := client.GenerateSignature()
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	payload.Signature = sig
-	w.Header().Set("Content-Type", "application/json")
-
-	json.NewEncoder(w).Encode(payload)
-
-}
-
-func VerifyHandler(w http.ResponseWriter, r *http.Request) {
-	data := r.URL.Query().Get("data")
-	if data == "" {
-		http.Error(w, "missing data param", 400)
-		return
-	}
-
-	client, _ := esewa.New("8gBm/:&EnhH.1/q", &esewa.EsewaPayload{})
-	err := client.VerifySignature(data)
-	if err != nil {
-		http.Error(w, "invalid signature: "+err.Error(), 400)
-		return
-	}
-
-	//suncrintion logic
-	subrepo := repository.NewSubscriptionRepository()
-	subservice := service.NewSubscriptionService(subrepo)
-	c := NewSubscriptionController(subservice)
-
-	if c.GetSubscriptionStatus("barunnbhattarai@gmail.com") == false {
-		c.SubscribeUser("barunnbhattarai@gmail.com")
-		return
-	}
-	w.Write([]byte("payment verified ok"))
-
-}
-
-func FailureHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("payment failed"))
 }

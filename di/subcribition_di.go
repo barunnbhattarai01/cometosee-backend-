@@ -6,12 +6,9 @@ import (
 	"cometosee/service"
 )
 
-func SubcribntionDi() *controller.SubscriptionController {
-	//repo
-	subscriptionRepo := repository.NewSubscriptionRepository()
-	//service
-	subscriptionService := service.NewSubscriptionService(subscriptionRepo)
-	//controller
-	subscriptionController := controller.NewSubscriptionController(subscriptionService)
-	return subscriptionController
+func SetupSubscriptionController() *controller.SubscriptionController {
+	subRepo := repository.NewSubscriptionRepository()
+	subService := service.NewSubscriptionService(subRepo)
+
+	return controller.NewSubscriptionController(subService)
 }

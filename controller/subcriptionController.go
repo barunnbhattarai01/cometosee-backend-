@@ -15,41 +15,35 @@ func NewSubscriptionController(service service.SubscriptionService) *Subscriptio
 	return &SubscriptionController{service: service}
 }
 
-func (c *SubscriptionController) SubscribeUser(email string) error {
-	serviceErr := c.service.SubscribeUser(email)
-
-	if serviceErr != nil {
-		return serviceErr
-	}
-	return nil
+func (c *SubscriptionController) SubscribeUser(authID int, plan string) error {
+	return c.service.SubscribeUser(authID, plan)
 }
 
 func (c *SubscriptionController) UnsubscribeUser(w http.ResponseWriter, r *http.Request) {
+	authID := common.GetAuthid(r.Context())
 
-	type requestBody struct {
-		Email string `json:"email"`
-	}
-
-	var reqBody requestBody
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-	serviceErr := c.service.UnsubscribeUser(reqBody.Email)
-
-	if serviceErr != nil {
+	if err := c.service.UnsubscribeUser(int(authID)); err != nil {
 		common.WriteJSONError(w, "failed to unsubscribe user", http.StatusInternalServerError)
 		return
 	}
 
-	common.WriteJSONMessage(w, "sucessfully deleted the subcription")
+	common.WriteJSONMessage(w, "successfully cancelled the subscription")
 }
 
-func (c *SubscriptionController) GetSubscriptionStatus(email string) bool {
-	return c.service.GetSubscriptionStatus(email)
+func (c *SubscriptionController) GetSubscriptionStatusHandler(w http.ResponseWriter, r *http.Request) {
+	authID := common.GetAuthid(r.Context())
+
+	active, err := c.service.GetSubscriptionStatus(int(authID))
+	if err != nil {
+		common.WriteJSONError(w, "failed to fetch subscription status", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]bool{
+		"active": active,
+	})
 }
 
-func (c *SubscriptionController) UpdateSubscriptionEndDate(email string) error {
-	service := c.service.UpdateSubscriptionEndDate(email)
-	return service
+func (c *SubscriptionController) ExtendSubscription(authID int, plan string) error {
+	return c.service.ExtendSubscription(authID, plan)
 }
