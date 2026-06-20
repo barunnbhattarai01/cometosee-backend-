@@ -160,6 +160,6 @@ func (s *PostService) GetSlotParticipants(slotID int, authId int) ([]map[string]
 	return s.repo.GetSlotParticipants(slotID, authId)
 }
 
-func (s *PostService) GetUserWhoLikedMyPost(authId int) ([]map[string]interface{}, error) {
-	return s.repo.GetUsersWhoLikedMyPosts(authId)
+func (s *PostService) GetUserWhoLikedAndJoinedAndCommentMyPost(authId int) ([]map[string]interface{}, error) {
+	return s.repo.GetUsersWhoLikedAndJoinedAndCommentMyPosts(authId)
 }

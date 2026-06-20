@@ -225,6 +225,7 @@ EXECUTE FUNCTION update_geom_column();
 
 	liketable := `create table if not exists post_likes(
 	 like_id serial primary key,
+	 created_at TIMESTAMP DEFAULT NOW(),
 	 auth_id int not null REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
 		 post_id int not null REFERENCES post(post_id) ON DELETE CASCADE,
 		 unique(post_id,auth_id)

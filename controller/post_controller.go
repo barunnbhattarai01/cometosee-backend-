@@ -264,7 +264,7 @@ func (c *PostController) LatestLike(w http.ResponseWriter, r *http.Request) {
 
 	authId := common.GetAuthid(r.Context())
 
-	users, err := c.service.GetUserWhoLikedMyPost(int(authId))
+	users, err := c.service.GetUserWhoLikedAndJoinedAndCommentMyPost(int(authId))
 	if err != nil {
 		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
 		return

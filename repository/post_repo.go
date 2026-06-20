@@ -564,22 +564,60 @@ func (r *PostRepository) IsJoinedSlot(postId, authId int) (bool, error) {
 	return exists, nil
 }
 
-func (r *PostRepository) GetUsersWhoLikedMyPosts(authId int) ([]map[string]interface{}, error) {
+func (r *PostRepository) GetUsersWhoLikedAndJoinedAndCommentMyPosts(authId int) ([]map[string]interface{}, error) {
 
 	rows, err := intailizer.DB.Query(`
-		SELECT DISTINCT ON (a.auth_id, p.post_id)
-			a.auth_id,
-			a.username,
-			u.avatar,
-			p.post_id,
-			p.caption,
-			pl.like_id
-		FROM post p
-		JOIN post_likes pl ON p.post_id = pl.post_id
-		JOIN cometoseeauth a ON a.auth_id = pl.auth_id
-		LEFT JOIN userdetailinfo u ON u.auth_id = a.auth_id
-		WHERE p.auth_id = $1
-		ORDER BY a.auth_id, p.post_id, pl.like_id DESC;
+	SELECT
+    a.auth_id,
+    a.username,
+    u.avatar,
+    p.post_id,
+    p.caption,
+    pl.like_id AS event_id,
+    'like' AS event_type,
+      EXTRACT(EPOCH FROM pl.created_at)::bigint AS sort_time 
+FROM post p
+JOIN post_likes pl ON p.post_id = pl.post_id
+JOIN cometoseeauth a ON a.auth_id = pl.auth_id
+LEFT JOIN userdetailinfo u ON u.auth_id = a.auth_id
+WHERE p.auth_id = $1
+
+UNION ALL
+
+SELECT
+    a.auth_id,
+    a.username,
+    u.avatar,
+    p.post_id,
+    p.caption,
+    sp.slot_id AS event_id,
+    'slot_join' AS event_type,
+   EXTRACT(EPOCH FROM sp.joined_at)::bigint AS sort_time
+FROM post_slots ps
+JOIN post p ON p.post_id = ps.post_id
+JOIN slot_participants sp ON ps.slot_id = sp.slot_id
+JOIN cometoseeauth a ON a.auth_id = sp.auth_id
+LEFT JOIN userdetailinfo u ON u.auth_id = a.auth_id
+WHERE p.auth_id = $1
+
+UNION ALL
+
+SELECT
+    a.auth_id,
+    a.username,
+    u.avatar,
+    p.post_id,
+    p.caption,
+    c.comment_id AS event_id,
+    'comment' AS event_type,
+   EXTRACT(EPOCH FROM c.created_at)::bigint AS sort_time 
+FROM post p
+JOIN comments c ON p.post_id = c.post_id
+JOIN cometoseeauth a ON a.auth_id = c.auth_id
+LEFT JOIN userdetailinfo u ON u.auth_id = a.auth_id
+WHERE p.auth_id = $1
+
+ORDER BY sort_time DESC;
 	`, authId)
 
 	if err != nil {
@@ -596,9 +634,12 @@ func (r *PostRepository) GetUsersWhoLikedMyPosts(authId int) ([]map[string]inter
 		var avatar *string
 		var postID int
 		var postcaption string
-		var likeID int
 
-		if err := rows.Scan(&id, &username, &avatar, &postID, &postcaption, &likeID); err != nil {
+		var eventId int
+		var eventType string
+		var sortTime int64
+
+		if err := rows.Scan(&id, &username, &avatar, &postID, &postcaption, &eventId, &eventType, &sortTime); err != nil {
 			return nil, err
 		}
 
@@ -608,7 +649,9 @@ func (r *PostRepository) GetUsersWhoLikedMyPosts(authId int) ([]map[string]inter
 			"avatar":       avatar,
 			"post_id":      postID,
 			"post_caption": postcaption,
-			"like_id":      likeID,
+			"event_id":     eventId,
+			"event_type":   eventType,
+			"sort_time":    sortTime,
 		})
 	}
 
