@@ -19,8 +19,8 @@ func NewPostService(repo *repository.PostRepository) *PostService {
 	}
 }
 
-func (s *PostService) UploadPost(authID int, caption, image, venue string) (int, error) {
-	return s.repo.CreatePOST(authID, caption, image, venue)
+func (s *PostService) UploadPost(authID int, caption, image, venue string, lon, lat float64) (int, error) {
+	return s.repo.CreatePOST(authID, caption, image, venue, lon, lat)
 }
 
 func (s *PostService) LikePost(postId, authId int) (bool, error) {

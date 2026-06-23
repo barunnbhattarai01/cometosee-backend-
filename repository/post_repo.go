@@ -15,16 +15,16 @@ func NewPostRepository() *PostRepository {
 	return &PostRepository{} //this is like constructer in java
 }
 
-func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string) (int, error) {
+func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string, lon float64, lat float64) (int, error) {
 	//get user location
-	var lat, lon float64
+
 	var sport string
 	err := intailizer.DB.QueryRow(`
-		SELECT l.latitude, l.longitude,u.sport
+		SELECT u.sport
 		FROM location l
 		JOIN userdetailinfo u ON u.user_detail_id = l.user_detail_id
 		WHERE u.auth_id = $1
-	`, authID).Scan(&lat, &lon, &sport)
+	`, authID).Scan(&sport)
 	if err != nil {
 		return 0, fmt.Errorf("user location not found: %v", err)
 	}

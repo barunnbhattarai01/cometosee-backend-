@@ -43,10 +43,12 @@ func NewPostController(service *service.PostService) *PostController {
 func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 
 	type Req struct {
-		AuthID  int    `json:"auth_id"`
-		Caption string `json:"caption"`
-		Image   string `json:"image"`
-		Venue   string `json:"venue"`
+		AuthID  int     `json:"auth_id"`
+		Caption string  `json:"caption"`
+		Image   string  `json:"image"`
+		Venue   string  `json:"venue"`
+		Lon     float64 `json:"lon"`
+		Lat     float64 `json:"lat"`
 	}
 
 	var body Req
@@ -55,7 +57,7 @@ func (c *PostController) UploadPost(w http.ResponseWriter, r *http.Request) {
 	authId := common.GetAuthid(r.Context())
 	body.AuthID = int(authId)
 
-	id, err := c.service.UploadPost(body.AuthID, body.Caption, body.Image, body.Venue)
+	id, err := c.service.UploadPost(body.AuthID, body.Caption, body.Image, body.Venue, body.Lon, body.Lat)
 	if err != nil {
 		common.WriteJSONError(w, err.Error(), 500)
 		return
