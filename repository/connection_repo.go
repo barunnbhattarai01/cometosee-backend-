@@ -83,10 +83,27 @@ WHERE user_id_1 = $1 AND user_id_2 = $2
 }
 
 func (r *ConnectionRepo) GetUserConnections(user string) ([]model.Connection, error) {
+
 	query := `
-SELECT id, user_id_1, user_id_2, requested_by, status, created_at, updated_at
-FROM connectionstable
-WHERE user_id_1 = $1 OR user_id_2 = $1
+SELECT
+    c.id,
+    c.user_id_1,
+    c.user_id_2,
+    c.requested_by,
+    c.status,
+    c.created_at,
+    c.updated_at,
+        COALESCE(ud.avatar, '') AS avatar
+FROM connectionstable c
+JOIN cometoseeauth a
+ON a.username = CASE
+    WHEN c.user_id_1 = $1 THEN c.user_id_2
+    ELSE c.user_id_1
+END
+LEFT JOIN userdetailinfo ud
+ON ud.auth_id = a.auth_id
+WHERE c.user_id_1 = $1 OR c.user_id_2 = $1
+ORDER BY c.created_at DESC;
 `
 
 	rows, err := intailizer.DB.Query(query, user)
@@ -107,6 +124,7 @@ WHERE user_id_1 = $1 OR user_id_2 = $1
 			&conn.Status,
 			&conn.CreatedAt,
 			&conn.UpdatedAt,
+			&conn.Avatar,
 		)
 		if err != nil {
 			return nil, err
@@ -146,15 +164,22 @@ AND status IN ('pending', 'blocked','accepted')
 //need to fetch a connected people to show connected people
 
 func (r *ConnectionRepo) ConnectedPeople(user string) ([]model.UserPublic, error) {
+
 	query := `
-SELECT id,
-CASE 
-        WHEN user_id_1 = $1 THEN user_id_2
-        ELSE user_id_1
-    END AS other_user 
-FROM connectionstable
-WHERE status = 'accepted' AND 
-(user_id_1 = $1 OR user_id_2 = $1)
+SELECT
+    a.auth_id,
+    a.username,
+        COALESCE(ud.avatar, '') AS avatar
+FROM connectionstable c
+JOIN cometoseeauth a
+ON a.username = CASE
+    WHEN c.user_id_1 = $1 THEN c.user_id_2
+    ELSE c.user_id_1
+END
+LEFT JOIN userdetailinfo ud
+ON ud.auth_id = a.auth_id
+WHERE c.status = 'accepted'
+AND (c.user_id_1 = $1 OR c.user_id_2 = $1)
 `
 
 	rows, err := intailizer.DB.Query(query, user)
@@ -167,7 +192,7 @@ WHERE status = 'accepted' AND
 
 	for rows.Next() {
 		var u model.UserPublic
-		if err := rows.Scan(&u.ID, &u.Username); err != nil {
+		if err := rows.Scan(&u.ID, &u.Username, &u.Avatar); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
@@ -177,9 +202,15 @@ WHERE status = 'accepted' AND
 }
 
 func (r *ConnectionRepo) DiscoveredPeople(user string) ([]model.UserPublic, error) {
+
 	query := `
-	SELECT u.auth_id, u.username
+SELECT
+    u.auth_id,
+    u.username,
+    COALESCE(ud.avatar, '') AS avatar
 FROM cometoseeauth u
+LEFT JOIN userdetailinfo ud
+ON ud.auth_id = u.auth_id
 WHERE u.username != $1
 
 AND NOT EXISTS (
@@ -193,7 +224,8 @@ AND NOT EXISTS (
     AND c.status IN ('pending', 'accepted')
 )
 
-ORDER BY u.auth_id DESC`
+ORDER BY u.auth_id DESC
+`
 
 	rows, err := intailizer.DB.Query(query, user)
 	if err != nil {
@@ -204,7 +236,7 @@ ORDER BY u.auth_id DESC`
 	var users []model.UserPublic
 	for rows.Next() {
 		var u model.UserPublic
-		if err := rows.Scan(&u.ID, &u.Username); err != nil {
+		if err := rows.Scan(&u.ID, &u.Username, &u.Avatar); err != nil {
 			return nil, err
 		}
 		users = append(users, u)

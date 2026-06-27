@@ -132,7 +132,7 @@ func (c *ConnectionController) GetReceivedRequests(w http.ResponseWriter, r *htt
 
 	data, err := c.service.GetReceivedRequests(username)
 	if err != nil {
-		http.Error(w, `{"message":"failed to fetch data"}`, http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -159,7 +159,7 @@ func (c *ConnectionController) GetSentRequests(w http.ResponseWriter, r *http.Re
 
 	data, err := c.service.GetSentRequests(username)
 	if err != nil {
-		http.Error(w, `{"message":"failed to fetch data"}`, http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
