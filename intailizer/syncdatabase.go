@@ -34,6 +34,7 @@ func Syncdatabase() {
 	sender text not null,
 	room text not null,
 	message text not null,
+	receiver text not null,
 	sent_at timestamp not null default now()
 	)
 	`

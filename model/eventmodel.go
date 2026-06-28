@@ -16,6 +16,8 @@ const (
 	EventChatRoom        = "change room"
 	EventRegister        = "register"
 	EventVideoCallInvite = "video call invite"
+	EventGetHistory      = "get history"
+	EventHistoryResponse = "history response"
 )
 
 type SendMessageEvent struct {
@@ -42,4 +44,15 @@ type VideoCallInviteEvent struct {
 	To           string `json:"to"`
 	SessionID    int64  `json:"session_id"`
 	ConnectionID int64  `json:"connection_id"`
+}
+
+type GetHistoryEvent struct {
+	Room     string `json:"room"`
+	Limit    int    `json:"limit"`
+	BeforeID int64  `json:"before_id,omitempty"`
+	AfterID  int64  `json:"after_id,omitempty"`
+}
+
+type HistoryResponseEvent struct {
+	Messages []Message `json:"messages"`
 }

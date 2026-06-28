@@ -26,6 +26,8 @@ func (s *WebsocketService) registerHandler() {
 	s.Manager.Handlers[model.EventSendMessage] = s.SendMessage
 	s.Manager.Handlers[model.EventVideoCallInvite] = s.VideoCallInvite
 
+	s.Manager.Handlers[model.EventGetHistory] = s.GetHistory
+
 }
 
 func (s *WebsocketService) RouteEvent(event model.Event, c *model.Client) error {
@@ -34,5 +36,3 @@ func (s *WebsocketService) RouteEvent(event model.Event, c *model.Client) error 
 	}
 	return fmt.Errorf("unknown event type: %s", event.Type)
 }
-
-
