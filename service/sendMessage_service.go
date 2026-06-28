@@ -3,7 +3,6 @@ package service
 import (
 	"cometosee/model"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 )
@@ -22,8 +21,8 @@ func (s *WebsocketService) SendMessage(event model.Event, c *model.Client) error
 	if err := s.Repo.SaveMessage(msg.From, msg.To, c.ChatRoom, msg.Message, newMsg.Sent); err != nil {
 		log.Println("db error:", err)
 	}
-	fmt.Print(msg.From)
-	fmt.Print(msg.To, msg.Message, newMsg.Sent, c.ChatRoom)
+	// fmt.Print(msg.From)
+	// fmt.Print(msg.To, msg.Message, newMsg.Sent, c.ChatRoom)
 
 	data, _ := json.Marshal(newMsg)
 	out := model.Event{

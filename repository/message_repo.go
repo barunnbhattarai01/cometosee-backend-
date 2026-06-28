@@ -62,7 +62,6 @@ func (r *messageRepo) GetLatest(room string, limit int) ([]model.Message, error)
 }
 
 // GetBefore returns `limit` messages older than beforeID, for pagination/scroll-up.
-// Returned oldest-first, matching GetLatest's ordering.
 func (r *messageRepo) GetBefore(room string, beforeID int64, limit int) ([]model.Message, error) {
 	query := `
 		SELECT id, sender, receiver, room, message, sent_at
