@@ -29,5 +29,5 @@ func (s *MapService) GetMapEventPins(
 		return nil, err
 	}
 
-	return s.mapRepo.MapEventPin(ctx, lat, lon, radius, sport)
+	return s.mapRepo.MapEventPin(ctx, lat, lon, radius, sport, authid)
 }

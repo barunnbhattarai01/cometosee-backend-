@@ -18,8 +18,8 @@ func (r *MapRepository) MapEventPin(
 	lon float64,
 	radius int,
 	sport string,
+	authId int,
 ) ([]map[string]interface{}, error) {
-
 	rows, err := intailizer.DB.QueryContext(ctx, `
     SELECT
         p.post_id,
@@ -38,10 +38,13 @@ func (r *MapRepository) MapEventPin(
             SELECT COUNT(*)
             FROM slot_participants sp2
             WHERE sp2.slot_id = ps.slot_id
-        ) AS current_participants
+        ) AS current_participants,
+        (sp_mine.auth_id IS NOT NULL) AS is_joined
     FROM post p
     JOIN cometoseeauth a ON p.auth_id = a.auth_id
     JOIN post_slots ps ON ps.post_id = p.post_id
+    LEFT JOIN slot_participants sp_mine
+        ON sp_mine.slot_id = ps.slot_id AND sp_mine.auth_id = $5
     WHERE
         p.latitude IS NOT NULL
         AND p.longitude IS NOT NULL
@@ -52,14 +55,14 @@ func (r *MapRepository) MapEventPin(
             $3
         )
     ORDER BY p.created_at DESC, ps.start_time ASC
-`, lat, lon, radius, sport)
-
+`, lat, lon, radius, sport, authId)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	postMap := make(map[int]map[string]interface{})
+	postJoined := make(map[int]bool)
 	var order []int
 	seenSlots := make(map[int]bool)
 
@@ -71,6 +74,7 @@ func (r *MapRepository) MapEventPin(
 		var startTime, endTime *time.Time
 		var maxParticipants *int
 		var currentParticipants *int
+		var isJoined bool
 
 		err := rows.Scan(
 			&id,
@@ -86,6 +90,7 @@ func (r *MapRepository) MapEventPin(
 			&endTime,
 			&maxParticipants,
 			&currentParticipants,
+			&isJoined,
 		)
 		if err != nil {
 			return nil, err
@@ -102,6 +107,7 @@ func (r *MapRepository) MapEventPin(
 				"longitude": longitude,
 				"latitude":  latitude,
 				"slots":     []map[string]interface{}{},
+				"is_joined": false,
 			}
 			order = append(order, id)
 		}
@@ -118,11 +124,16 @@ func (r *MapRepository) MapEventPin(
 					"available":  available,
 					"start_time": startTime,
 					"end_time":   endTime,
+					"is_joined":  isJoined,
 				}
 				postMap[id]["slots"] = append(
 					postMap[id]["slots"].([]map[string]interface{}),
 					slot,
 				)
+
+				if isJoined {
+					postJoined[id] = true
+				}
 			}
 		}
 	}
@@ -133,7 +144,11 @@ func (r *MapRepository) MapEventPin(
 
 	posts := make([]map[string]interface{}, 0, len(order))
 	for _, id := range order {
-		posts = append(posts, postMap[id])
+		p := postMap[id]
+		if postJoined[id] {
+			p["is_joined"] = true
+		}
+		posts = append(posts, p)
 	}
 
 	return posts, nil
@@ -141,12 +156,10 @@ func (r *MapRepository) MapEventPin(
 
 func (r *MapRepository) GetUserSport(authId int) (string, error) {
 	var sport string
-
 	err := intailizer.DB.QueryRow(`
 		SELECT sport 
 		FROM userdetailinfo 
 		WHERE auth_id = $1
 	`, authId).Scan(&sport)
-
 	return sport, err
 }

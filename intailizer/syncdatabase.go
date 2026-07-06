@@ -35,7 +35,7 @@ func Syncdatabase() {
 	room text not null,
 	message text not null,
 	receiver text not null,
-	sent_at timestamp not null default now()
+	sent_at TIMESTAMPTZ  not null default now()
 	)
 	`
 	_, err = DB.Exec(messgingtable)
