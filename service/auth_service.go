@@ -23,6 +23,7 @@ type AuthService interface {
 	ForgetPassword(email string) error
 	ResetPassword(email, otp, newPassword string) error
 	GetProfile(email string) (model.Auth, error)
+	VerifyEmail(email, otp string) (bool, error)
 }
 
 type authService struct {
@@ -45,7 +46,20 @@ func (s *authService) Signup(user model.Auth) error {
 		return errors.New("invalid email format")
 	}
 
-	return s.repo.CreateUser(user)
+	otp := genrateOtp()
+	SaveOtp(user.Email, otp)
+
+	model.PendingUsers[user.Email] = model.PendingSignup{
+		User:      user,
+		ExpiredAt: time.Now().Add(5 * time.Minute),
+	}
+
+	if err := sendEmail(user.Email, otp); err != nil {
+		delete(model.PendingUsers, user.Email)
+		return err
+	}
+
+	return nil
 }
 
 func (s *authService) Login(email, password string) (string, string, error) {
@@ -101,6 +115,7 @@ func SaveOtp(idetifier string, otp string) {
 }
 
 func verifyotp(identifier string, otp string) error {
+
 	data, exists := model.OTPStored[identifier]
 	if !exists {
 		return errors.New("otp not found")
@@ -144,7 +159,7 @@ func sendEmail(to string, otp string) error {
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 
-	message := []byte(fmt.Sprintf("Subject: Password Reset OTP\n\nYour OTP is: %s", otp))
+	message := []byte(fmt.Sprintf("Subject: Verifyemail OTP\n\nYour OTP is: %s", otp))
 
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
@@ -187,4 +202,26 @@ func (s *authService) GetProfile(email string) (model.Auth, error) {
 
 	user.Password = ""
 	return *user, nil
+}
+
+func (s *authService) VerifyEmail(email, otp string) (bool, error) {
+
+	email = strings.ToLower(email)
+
+	if err := verifyotp(email, otp); err != nil {
+		return false, err
+	}
+
+	pending, exists := model.PendingUsers[email]
+	if !exists {
+		return false, errors.New("signup request not found")
+	}
+
+	if err := s.repo.CreateUser(pending.User); err != nil {
+		return false, err
+	}
+
+	delete(model.PendingUsers, email)
+
+	return true, nil
 }

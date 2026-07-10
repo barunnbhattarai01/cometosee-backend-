@@ -53,7 +53,7 @@ func (c *AuthController) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.AuthTotal.Inc()
-	common.WriteJSONMessage(w, "user created sucessfully")
+	common.WriteJSONMessage(w, "User registered successfully. Please check your email for the OTP to verify your account.")
 
 }
 
@@ -138,4 +138,31 @@ func (c *AuthController) Getprofile(w http.ResponseWriter, r *http.Request) {
 		"profile": user,
 	})
 
+}
+
+func (c *AuthController) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var body struct {
+		Email string `json:"email"`
+		OTP   string `json:"otp"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	ok, err := c.service.VerifyEmail(body.Email, body.OTP)
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if !ok {
+		common.WriteJSONError(w, "verification failed", http.StatusBadRequest)
+		return
+	}
+
+	common.WriteJSONMessage(w, "User registered successfully")
 }

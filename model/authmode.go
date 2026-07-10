@@ -17,3 +17,10 @@ type OTP struct {
 
 var OTPStored = map[string]OTP{}
 var Email string
+
+type PendingSignup struct {
+	User      Auth
+	ExpiredAt time.Time
+}
+
+var PendingUsers = map[string]PendingSignup{}
