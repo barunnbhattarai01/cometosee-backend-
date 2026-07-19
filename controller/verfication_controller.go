@@ -31,6 +31,14 @@ type rejectVerificationRequest struct {
 type approveVerificationRequest struct {
 	AuthID int `json:"auth_id"`
 }
+type approvePlayerDocumentRequest struct {
+	DocumentID int `json:"document_id"`
+}
+
+type rejectPlayerDocumentRequest struct {
+	DocumentID int    `json:"document_id"`
+	Reason     string `json:"reason"`
+}
 
 func (c *VerificationController) UploadVerification(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -193,4 +201,44 @@ func (c *VerificationController) RejectVerification(w http.ResponseWriter, r *ht
 	}
 
 	common.WriteJSONMessage(w, "verification rejected")
+}
+
+func (c *VerificationController) ApprovePlayerDocument(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		common.WriteJSONError(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req approvePlayerDocumentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := c.service.ApprovePlayerDocument(req.DocumentID); err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	common.WriteJSONMessage(w, "document approved")
+}
+
+func (c *VerificationController) RejectPlayerDocument(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		common.WriteJSONError(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req rejectPlayerDocumentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := c.service.RejectPlayerDocument(req.DocumentID, req.Reason); err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	common.WriteJSONMessage(w, "document rejected")
 }

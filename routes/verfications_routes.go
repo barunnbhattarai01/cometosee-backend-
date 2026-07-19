@@ -15,7 +15,10 @@ func VerficationsRoutes(gor *mux.Router, verificationcontroller *controller.Veri
 	gor.HandleFunc("/verification/documents", middleware.JwtMiddlware(verificationcontroller.GetPlayerDocuments)).Methods("GET")
 
 	//admin  TODO need admin middleware
+
 	gor.HandleFunc("/admin/verification/pending", middleware.JwtMiddlware(verificationcontroller.GetPendingVerifications)).Methods("GET")
 	gor.HandleFunc("/admin/verification/approve", middleware.JwtMiddlware(verificationcontroller.ApproveVerification)).Methods("POST")
 	gor.HandleFunc("/admin/verification/reject", middleware.JwtMiddlware(verificationcontroller.RejectVerification)).Methods("POST")
+	gor.HandleFunc("/admin/verification/documents/approve", middleware.JwtMiddlware(verificationcontroller.ApprovePlayerDocument)).Methods("POST")
+	gor.HandleFunc("/admin/verification/documents/reject", middleware.JwtMiddlware(verificationcontroller.RejectPlayerDocument)).Methods("POST")
 }
