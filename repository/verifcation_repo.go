@@ -15,11 +15,17 @@ type VerificationRepository interface {
 
 	GetPlayerDocuments(authID int) ([]model.PlayerDocument, error)
 
+	GetPlayerDocumentByID(docID int) (*model.PlayerDocument, error)
+
 	GetPendingVerifications() ([]model.Verification, error)
 
 	ApproveVerification(authID int) error
 
 	RejectVerification(authID int, reason string) error
+
+	ApprovePlayerDocument(docID int) error
+
+	RejectPlayerDocument(docID int, reason string) error
 }
 
 type verificationRepository struct{}
@@ -152,6 +158,8 @@ document_url,
 issued_by,
 issue_date,
 verification_status,
+rejection_reason,
+verified_at,
 created_at
 
 FROM player_documents
@@ -183,6 +191,8 @@ ORDER BY created_at DESC
 			&d.IssuedBy,
 			&d.IssueDate,
 			&d.Status,
+			&d.RejectionReason,
+			&d.VerifiedAt,
 			&d.CreatedAt,
 		)
 
@@ -196,6 +206,56 @@ ORDER BY created_at DESC
 
 	return docs, nil
 
+}
+
+// get a single player document by id
+func (r *verificationRepository) GetPlayerDocumentByID(docID int) (*model.PlayerDocument, error) {
+
+	query := `
+SELECT
+
+document_id,
+auth_id,
+document_name,
+document_type,
+document_url,
+issued_by,
+issue_date,
+verification_status,
+rejection_reason,
+verified_at,
+created_at
+
+FROM player_documents
+WHERE document_id=$1
+`
+
+	var d model.PlayerDocument
+
+	err := intailizer.DB.QueryRow(query, docID).Scan(
+
+		&d.DocumentID,
+		&d.AuthID,
+		&d.DocumentName,
+		&d.DocumentType,
+		&d.DocumentURL,
+		&d.IssuedBy,
+		&d.IssueDate,
+		&d.Status,
+		&d.RejectionReason,
+		&d.VerifiedAt,
+		&d.CreatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &d, nil
 }
 
 // get pending verifications(admin)
@@ -318,4 +378,39 @@ WHERE auth_id=$2
 
 	return err
 
+}
+
+// approve player document(admin)
+func (r *verificationRepository) ApprovePlayerDocument(docID int) error {
+
+	_, err := intailizer.DB.Exec(`
+UPDATE player_documents
+
+SET
+
+verification_status='verified',
+verified_at=NOW(),
+rejection_reason=NULL
+
+WHERE document_id=$1
+`, docID)
+
+	return err
+}
+
+// reject player document(admin)
+func (r *verificationRepository) RejectPlayerDocument(docID int, reason string) error {
+
+	_, err := intailizer.DB.Exec(`
+UPDATE player_documents
+
+SET
+
+verification_status='rejected',
+rejection_reason=$1
+
+WHERE document_id=$2
+`, reason, docID)
+
+	return err
 }

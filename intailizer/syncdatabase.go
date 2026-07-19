@@ -18,7 +18,10 @@ func Syncdatabase() {
  auth_id serial primary key,
  email text unique not null,
  username text unique not null,
- password text not null
+ password text not null,
+ is_verified boolean default false,
+ created_at TIMESTAMPTZ not null default now(),
+ updated_at TIMESTAMPTZ not null default now()
  )  
    `
 
@@ -325,7 +328,9 @@ EXECUTE FUNCTION update_geom_column();
     document_url TEXT NOT NULL,
     issued_by TEXT,
     issue_date DATE,
+	rejection_reason TEXT,
     verification_status TEXT DEFAULT 'pending',
+	verified_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );`
 	_, err = DB.Exec(playerdocs)

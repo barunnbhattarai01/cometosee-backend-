@@ -15,6 +15,8 @@ type VerificationService interface {
 	GetPendingVerifications() ([]model.Verification, error)
 	ApproveVerification(authID int) error
 	RejectVerification(authID int, reason string) error
+	ApprovePlayerDocument(docID int) error
+	RejectPlayerDocument(docID int, reason string) error
 }
 
 type verificationService struct {
@@ -186,4 +188,49 @@ func (s *verificationService) RejectVerification(
 
 	return s.repo.RejectVerification(authID, reason)
 
+}
+
+// approve player document(admin)
+func (s *verificationService) ApprovePlayerDocument(docID int) error {
+
+	if docID <= 0 {
+		return errors.New("invalid document id")
+	}
+
+	doc, err := s.repo.GetPlayerDocumentByID(docID)
+	if err != nil {
+		return err
+	}
+	if doc == nil {
+		return errors.New("document not found")
+	}
+	if doc.Status == "verified" {
+		return errors.New("document already verified")
+	}
+
+	return s.repo.ApprovePlayerDocument(docID)
+}
+
+// reject player document (admin)
+func (s *verificationService) RejectPlayerDocument(docID int, reason string) error {
+
+	if docID <= 0 {
+		return errors.New("invalid document id")
+	}
+	if strings.TrimSpace(reason) == "" {
+		return errors.New("rejection reason is required")
+	}
+
+	doc, err := s.repo.GetPlayerDocumentByID(docID)
+	if err != nil {
+		return err
+	}
+	if doc == nil {
+		return errors.New("document not found")
+	}
+	if doc.Status == "rejected" {
+		return errors.New("document already rejected")
+	}
+
+	return s.repo.RejectPlayerDocument(docID, reason)
 }
