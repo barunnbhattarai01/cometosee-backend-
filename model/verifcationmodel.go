@@ -8,7 +8,7 @@ type Verification struct {
 	CitizenshipFront string     `json:"citizenship_front"`
 	CitizenshipBack  string     `json:"citizenship_back"`
 	Status           string     `json:"status"`
-	RejectionReason  string     `json:"rejection_reason"`
+	RejectionReason  *string    `json:"rejection_reason"`
 	VerifiedAt       *time.Time `json:"verified_at"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`
