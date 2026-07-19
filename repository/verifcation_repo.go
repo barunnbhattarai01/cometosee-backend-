@@ -364,7 +364,14 @@ WHERE auth_id=$1
 // reject verification(admin)
 func (r *verificationRepository) RejectVerification(authID int, reason string) error {
 
-	_, err := intailizer.DB.Exec(`
+	tx, err := intailizer.DB.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+	_, err = tx.Exec(`
 UPDATE user_verification
 
 SET
@@ -376,7 +383,23 @@ updated_at=NOW()
 WHERE auth_id=$2
 `, reason, authID)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+UPDATE cometoseeauth
+
+SET is_verified=false
+
+WHERE auth_id=$1
+`, authID)
+
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 
 }
 
