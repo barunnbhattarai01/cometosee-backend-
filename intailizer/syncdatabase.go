@@ -292,5 +292,46 @@ EXECUTE FUNCTION update_geom_column();
 		log.Fatal("error in creating slot participant table")
 	}
 
+	//verification table
+	verifcation := `CREATE TABLE IF NOT EXISTS user_verification (
+    verification_id SERIAL PRIMARY KEY,
+
+    auth_id INT NOT NULL UNIQUE
+        REFERENCES cometoseeauth(auth_id)
+        ON DELETE CASCADE,
+    citizenship_front TEXT NOT NULL,
+    citizenship_back TEXT NOT NULL,
+    verification_status TEXT NOT NULL DEFAULT 'pending',
+    rejection_reason TEXT,
+    verified_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);`
+
+	_, err = DB.Exec(verifcation)
+	if err != nil {
+		log.Fatalf("error in creating verification table :%v", err)
+	}
+
+	//player document table
+	playerdocs := `CREATE TABLE IF NOT EXISTS player_documents (
+    document_id SERIAL PRIMARY KEY,
+
+    auth_id INT NOT NULL
+        REFERENCES cometoseeauth(auth_id)
+        ON DELETE CASCADE,
+    document_name TEXT NOT NULL,
+    document_type TEXT NOT NULL,
+    document_url TEXT NOT NULL,
+    issued_by TEXT,
+    issue_date DATE,
+    verification_status TEXT DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW()
+);`
+	_, err = DB.Exec(playerdocs)
+	if err != nil {
+		log.Fatalf("error in creating player document table :%v", err)
+	}
+
 	fmt.Print("table ready")
 }

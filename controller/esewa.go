@@ -86,7 +86,14 @@ func (e *EsewaClient) GenerateSignature() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return utils.HmacSHA256(e.Secret, data), nil
+
+	sig := utils.HmacSHA256(e.Secret, data)
+	fmt.Print(sig)
+	fmt.Printf("Secret: %q\n", e.Secret)
+	fmt.Printf("Length: %d\n", len(e.Secret))
+	fmt.Println("Data:", data)
+	fmt.Println("Signature:", sig)
+	return sig, nil
 }
 
 func (e *EsewaClient) VerifySignature(data string) error {
@@ -107,7 +114,10 @@ func (e *EsewaClient) VerifySignature(data string) error {
 	if err != nil {
 		return err
 	}
+
 	signature := utils.HmacSHA256(e.Secret, i)
+	fmt.Print(signature)
+
 	if e.ReponsePayload.Signature != signature {
 		return errorz.ErrEsewaInvalidSignature
 	}
