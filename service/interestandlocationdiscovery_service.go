@@ -13,7 +13,7 @@ type DiscoveryService interface {
 		sport string,
 		skill string,
 		currentUserId int,
-	) ([]model.UserDetailInfo, error)
+	) ([]model.UserDetailInfoForCreate, error)
 }
 
 type discoveryService struct {
@@ -31,7 +31,7 @@ func (s *discoveryService) DiscoverUsers(
 	sport string,
 	skill string,
 	currentUserId int,
-) ([]model.UserDetailInfo, error) {
+) ([]model.UserDetailInfoForCreate, error) {
 
 	users, err := s.repo.FindNearbyUsers(lat, lon, radius, sport, skill, currentUserId)
 	if err != nil {

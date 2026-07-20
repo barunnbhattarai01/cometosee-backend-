@@ -18,7 +18,7 @@ func NewUserDetailInfoController(service service.UserDetailInfoService) *UserDet
 
 func (c *UserDetailInfoController) TakeUserDetailInfo(w http.ResponseWriter, r *http.Request) {
 
-	var userDetailInfo model.UserDetailInfo
+	var userDetailInfo model.UserDetailInfoForCreate
 	err := json.NewDecoder(r.Body).Decode(&userDetailInfo)
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -98,7 +98,7 @@ func (c *UserDetailInfoController) ProfileStatus(w http.ResponseWriter, r *http.
 
 func (c *UserDetailInfoController) UpdateUserDetailInfo(w http.ResponseWriter, r *http.Request) {
 
-	var user model.UserDetailInfo
+	var user model.UserDetailInfoForUpdate
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		common.WriteJSONError(w, "Invalid request payload", http.StatusBadRequest)
