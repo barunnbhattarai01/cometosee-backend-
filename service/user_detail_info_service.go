@@ -7,11 +7,11 @@ import (
 )
 
 type UserDetailInfoService interface {
-	TakeUserDetailInfo(user *model.UserDetailInfo) (string, error)
+	TakeUserDetailInfo(user *model.UserDetailInfoForCreate) (string, error)
 	TakeUserLocation(user *model.Location) (string, error)
 	IsProfileCompleted(auth_id int) (bool, error)
 	GetUserDetailIDByAuthID(authID int) (int, error)
-	UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error)
+	UpdateUserDetailInfo(user *model.UserDetailInfoForUpdate) (string, error)
 	UpdateLocation(user *model.Location) (string, error)
 	GetUserProfile(authId int) (*model.UserProfileResponse, error)
 }
@@ -25,7 +25,7 @@ func NewUserDetailInfoService(repo repository.UserDetailInfo) UserDetailInfoServ
 	return &userDetailInfoService{repo: repo}
 }
 
-func (s *userDetailInfoService) TakeUserDetailInfo(user *model.UserDetailInfo) (string, error) {
+func (s *userDetailInfoService) TakeUserDetailInfo(user *model.UserDetailInfoForCreate) (string, error) {
 
 	if user.Calling_name == "" || user.Sport == "" || user.Skill == "" || user.Bio == "" {
 		return "", errors.New("All fields are required")
@@ -53,7 +53,7 @@ func (s *userDetailInfoService) GetUserDetailIDByAuthID(authID int) (int, error)
 	return s.repo.GetUserDetailIDByAuthID(authID)
 }
 
-func (s *userDetailInfoService) UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error) {
+func (s *userDetailInfoService) UpdateUserDetailInfo(user *model.UserDetailInfoForUpdate) (string, error) {
 
 	if user.AuthId == 0 {
 		return "", errors.New("auth_id is required")

@@ -7,11 +7,11 @@ import (
 )
 
 type UserDetailInfo interface {
-	TakeUserDetailInfo(user *model.UserDetailInfo) (string, error)
+	TakeUserDetailInfo(user *model.UserDetailInfoForCreate) (string, error)
 	TakeUserLocation(user *model.Location) (string, error)
 	IsProfileExists(auth_id int) (bool, error)
 	GetUserDetailIDByAuthID(authID int) (int, error)
-	UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error)
+	UpdateUserDetailInfo(user *model.UserDetailInfoForUpdate) (string, error)
 	UpdateLocation(user *model.Location) (string, error)
 	GetUserProfileByAuthID(authID int) (*model.UserProfileResponse, error)
 }
@@ -22,7 +22,7 @@ func NewUserDetailInfoRepository() UserDetailInfo {
 	return &userDetailInfoRepo{}
 }
 
-func (r *userDetailInfoRepo) TakeUserDetailInfo(user *model.UserDetailInfo) (string, error) {
+func (r *userDetailInfoRepo) TakeUserDetailInfo(user *model.UserDetailInfoForCreate) (string, error) {
 
 	query := `insert into userdetailinfo(auth_id, calling_name, sport, skill, avatar, bio) values($1, $2, $3, $4, $5, $6)`
 	_, err := intailizer.DB.Exec(query, user.AuthId, user.Calling_name, user.Sport, user.Skill, user.Avatar, user.Bio)
@@ -94,16 +94,16 @@ func (r *userDetailInfoRepo) GetUserDetailIDByAuthID(authID int) (int, error) {
 	return id, nil
 }
 
-func (r *userDetailInfoRepo) UpdateUserDetailInfo(user *model.UserDetailInfo) (string, error) {
+func (r *userDetailInfoRepo) UpdateUserDetailInfo(user *model.UserDetailInfoForUpdate) (string, error) {
 
 	query := `
 	UPDATE userdetailinfo
 	SET 
-		calling_name = $1,
-		sport = $2,
-		skill = $3,
-		avatar = $4,
-		bio = $5
+		calling_name = COALESCE($1, calling_name),
+		sport        = COALESCE($2, sport),
+		skill        = COALESCE($3, skill),
+		avatar       = COALESCE($4, avatar),
+		bio          = COALESCE($5, bio)
 	WHERE auth_id = $6
 	`
 

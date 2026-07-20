@@ -15,7 +15,7 @@ type InterestAndLocationDiscoveryRepository interface {
 		sport string,
 		skill string,
 		currentUserId int,
-	) ([]model.UserDetailInfo, error)
+	) ([]model.UserDetailInfoForCreate, error)
 }
 
 type interestAndLocationDiscoveryRepository struct{}
@@ -31,7 +31,7 @@ func (r *interestAndLocationDiscoveryRepository) FindNearbyUsers(
 	sport string,
 	skill string,
 	currentUserId int,
-) ([]model.UserDetailInfo, error) {
+) ([]model.UserDetailInfoForCreate, error) {
 
 	query := `
 	SELECT u.user_detail_id, u.auth_id, u.calling_name, u.sport, u.skill,u.bio,u.avatar,u.created_at
@@ -60,10 +60,10 @@ LIMIT 20;
 	}
 	defer rows.Close()
 
-	var users []model.UserDetailInfo
+	var users []model.UserDetailInfoForCreate
 
 	for rows.Next() {
-		var u model.UserDetailInfo
+		var u model.UserDetailInfoForCreate
 		err := rows.Scan(
 			&u.User_Detail_Id,
 			&u.AuthId,

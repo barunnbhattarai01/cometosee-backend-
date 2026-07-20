@@ -1,6 +1,18 @@
 package model
 
-type UserDetailInfo struct {
+type UserDetailInfoForUpdate struct {
+	User_Detail_Id int     `json:"id"`
+	AuthId         int     `json:"auth_id"`
+	Calling_name   *string `json:"calling_name"`
+	Sport          *string `json:"sport"`
+	Skill          *string `json:"skill"`
+	Avatar         *string `json:"avatar"`
+	Bio            *string `json:"bio"`
+	Created_at     string  `json:"created_at"`
+}
+
+// for creating user detail info
+type UserDetailInfoForCreate struct {
 	User_Detail_Id int    `json:"id"`
 	AuthId         int    `json:"auth_id"`
 	Calling_name   string `json:"calling_name"`
