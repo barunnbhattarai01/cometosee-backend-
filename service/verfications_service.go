@@ -17,6 +17,7 @@ type VerificationService interface {
 	RejectVerification(authID int, reason string) error
 	ApprovePlayerDocument(docID int) error
 	RejectPlayerDocument(docID int, reason string) error
+	GetPendingPlayerDocuments() ([]model.PlayerDocument, error)
 }
 
 type verificationService struct {
@@ -233,4 +234,11 @@ func (s *verificationService) RejectPlayerDocument(docID int, reason string) err
 	}
 
 	return s.repo.RejectPlayerDocument(docID, reason)
+}
+
+// get pending player documents(admin)
+func (s *verificationService) GetPendingPlayerDocuments() ([]model.PlayerDocument, error) {
+
+	return s.repo.GetPendingPlayerDocuments()
+
 }

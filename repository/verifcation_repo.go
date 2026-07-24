@@ -26,6 +26,7 @@ type VerificationRepository interface {
 	ApprovePlayerDocument(docID int) error
 
 	RejectPlayerDocument(docID int, reason string) error
+	GetPendingPlayerDocuments() ([]model.PlayerDocument, error)
 }
 
 type verificationRepository struct{}
@@ -436,4 +437,62 @@ WHERE document_id=$2
 `, reason, docID)
 
 	return err
+}
+
+// get pending player documents(admin)
+func (r *verificationRepository) GetPendingPlayerDocuments() ([]model.PlayerDocument, error) {
+
+	query := `
+SELECT
+	document_id,
+	auth_id,
+	document_name,
+	document_type,
+	document_url,
+	issued_by,
+	issue_date,
+	verification_status,
+	rejection_reason,
+	verified_at,
+	created_at
+
+FROM player_documents
+WHERE verification_status='pending'
+ORDER BY created_at ASC
+`
+
+	rows, err := intailizer.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var docs []model.PlayerDocument
+
+	for rows.Next() {
+
+		var d model.PlayerDocument
+
+		err := rows.Scan(
+			&d.DocumentID,
+			&d.AuthID,
+			&d.DocumentName,
+			&d.DocumentType,
+			&d.DocumentURL,
+			&d.IssuedBy,
+			&d.IssueDate,
+			&d.Status,
+			&d.RejectionReason,
+			&d.VerifiedAt,
+			&d.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		docs = append(docs, d)
+	}
+
+	return docs, rows.Err()
 }
