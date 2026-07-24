@@ -657,3 +657,54 @@ ORDER BY sort_time DESC;
 
 	return users, nil
 }
+
+// fetch all slot participants email
+func (r *PostRepository) GetParticipantEmails(postID int) ([]string, error) {
+
+	rows, err := intailizer.DB.Query(`
+		SELECT DISTINCT a.email
+		FROM post_slots ps
+		JOIN slot_participants sp
+			ON ps.slot_id = sp.slot_id
+		JOIN cometoseeauth a
+			ON sp.auth_id = a.auth_id
+		WHERE ps.post_id = $1
+	`, postID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var emails []string
+
+	for rows.Next() {
+		var email string
+		rows.Scan(&email)
+		emails = append(emails, email)
+	}
+
+	return emails, nil
+}
+
+// delete post
+func (r *PostRepository) CancelPost(postID, authID int) error {
+
+	result, err := intailizer.DB.Exec(`
+		DELETE FROM post
+WHERE post_id=$1
+AND auth_id=$2
+	`, postID, authID)
+
+	if err != nil {
+		return err
+	}
+
+	affected, _ := result.RowsAffected()
+
+	if affected == 0 {
+		return errors.New("post not found")
+	}
+
+	return nil
+}

@@ -277,3 +277,25 @@ func (c *PostController) LatestLike(w http.ResponseWriter, r *http.Request) {
 		"user":    users,
 	})
 }
+
+//delete the post and notify user
+
+func (c *PostController) CancelPost(w http.ResponseWriter, r *http.Request) {
+
+	type Req struct {
+		PostID int `json:"post_id"`
+	}
+
+	var body Req
+	json.NewDecoder(r.Body).Decode(&body)
+
+	authID := common.GetAuthid(r.Context())
+
+	err := c.service.CancelPost(body.PostID, int(authID))
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), 500)
+		return
+	}
+
+	common.WriteJSONMessage(w, "Event cancelled successfully")
+}
