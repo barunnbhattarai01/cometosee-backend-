@@ -1,10 +1,12 @@
 package service
 
 import (
+	"cometosee/common"
 	"cometosee/model"
 	"cometosee/repository"
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -162,4 +164,35 @@ func (s *PostService) GetSlotParticipants(slotID int, authId int) ([]map[string]
 
 func (s *PostService) GetUserWhoLikedAndJoinedAndCommentMyPost(authId int) ([]map[string]interface{}, error) {
 	return s.repo.GetUsersWhoLikedAndJoinedAndCommentMyPosts(authId)
+}
+
+// cancel and delete post
+func (s *PostService) CancelPost(postID, authID int) error {
+
+	emails, err := s.repo.GetParticipantEmails(postID)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.CancelPost(postID, authID)
+	if err != nil {
+		return err
+	}
+
+	for _, email := range emails {
+		err := common.SendMail(
+			email,
+			"Event Cancelled",
+			`The event you joined has been cancelled by its creator.
+
+Sorry for the inconvenience.
+
+Team ComeToSee`,
+		)
+		if err != nil {
+			fmt.Println("mail error:", err)
+		}
+	}
+
+	return nil
 }
