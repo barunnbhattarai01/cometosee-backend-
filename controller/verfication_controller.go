@@ -242,3 +242,34 @@ func (c *VerificationController) RejectPlayerDocument(w http.ResponseWriter, r *
 
 	common.WriteJSONMessage(w, "document rejected")
 }
+
+// get pending player documents(admin)
+func (c *VerificationController) GetPendingPlayerDocuments(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	docs, err := c.service.GetPendingPlayerDocuments()
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Failed to fetch pending player documents",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Pending player documents fetched successfully",
+		"data":    docs,
+	})
+}
