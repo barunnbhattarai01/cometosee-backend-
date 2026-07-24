@@ -21,7 +21,12 @@ func (s *WebsocketService) Register(event model.Event, c *model.Client) error {
 
 	if old, ok := s.Manager.Users[re.Name]; ok && old != c {
 		delete(s.Manager.Clients, old)
-		return fmt.Errorf("username already exists")
+
+		if old.ChatRoom != "" {
+			delete(s.Manager.Rooms[old.ChatRoom], old)
+		}
+
+		old.Connection.Close()
 	}
 
 	c.Username = re.Name
