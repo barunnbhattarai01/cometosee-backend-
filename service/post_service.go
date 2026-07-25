@@ -169,6 +169,11 @@ func (s *PostService) GetUserWhoLikedAndJoinedAndCommentMyPost(authId int) ([]ma
 // cancel and delete post
 func (s *PostService) CancelPost(postID, authID int) error {
 
+	info, err := s.repo.GetCancelPostInfo(postID)
+	if err != nil {
+		return err
+	}
+
 	emails, err := s.repo.GetParticipantEmails(postID)
 	if err != nil {
 		return err
@@ -180,17 +185,62 @@ func (s *PostService) CancelPost(postID, authID int) error {
 	}
 
 	for _, email := range emails {
-		err := common.SendMail(
-			email,
-			"Event Cancelled",
-			`The event you joined has been cancelled by its creator.
 
-Sorry for the inconvenience.
+		body := fmt.Sprintf(`
+<p>Hello,</p>
 
-Team ComeToSee`,
+<p>
+The activity you joined has been
+<strong style="color:red;">cancelled</strong>
+by its organizer.
+</p>
+
+<table style="border-collapse:collapse;width:100%%;">
+<tr>
+<td><strong>Sport</strong></td>
+<td>%s</td>
+</tr>
+
+<tr>
+<td><strong>details</strong></td>
+<td>%s</td>
+</tr>
+
+<tr>
+<td><strong>Venue</strong></td>
+<td>%s</td>
+</tr>
+
+<tr>
+<td><strong>Start Time</strong></td>
+<td>%s</td>
+</tr>
+
+<tr>
+<td><strong>End Time</strong></td>
+<td>%s</td>
+</tr>
+</table>
+
+<br>
+
+<p>
+We sincerely apologize for the inconvenience.
+</p>
+
+<p>
+Thank you for using <strong>Cometosee</strong>.
+</p>
+`,
+			info.Sport,
+			info.Caption,
+			info.Venue,
+			info.StartTime.Format("02 Jan 2006 03:04 PM"),
+			info.EndTime.Format("02 Jan 2006 03:04 PM"),
 		)
-		if err != nil {
-			fmt.Println("mail error:", err)
+
+		if err := common.SendMail(email, "Activity Cancelled ", body); err != nil {
+			fmt.Println(err)
 		}
 	}
 

@@ -708,3 +708,34 @@ AND auth_id=$2
 
 	return nil
 }
+
+func (r *PostRepository) GetCancelPostInfo(postID int) (*model.CancelPostInfo, error) {
+
+	var info model.CancelPostInfo
+
+	err := intailizer.DB.QueryRow(`
+		SELECT
+			p.caption,
+			p.venue,
+			p.sport,
+			ps.start_time,
+			ps.end_time
+		FROM post p
+		LEFT JOIN post_slots ps
+			ON p.post_id = ps.post_id
+		WHERE p.post_id = $1
+		LIMIT 1
+	`, postID).Scan(
+		&info.Caption,
+		&info.Venue,
+		&info.Sport,
+		&info.StartTime,
+		&info.EndTime,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &info, nil
+}

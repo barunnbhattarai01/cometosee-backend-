@@ -25,3 +25,11 @@ type SlotParticipant struct {
 	AuthID   int       `json:"auth_id"`
 	JoinedAt time.Time `json:"joined_at"`
 }
+
+type CancelPostInfo struct {
+	Caption   string
+	Venue     string
+	Sport     string
+	StartTime time.Time
+	EndTime   time.Time
+}

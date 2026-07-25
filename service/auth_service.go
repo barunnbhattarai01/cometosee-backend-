@@ -159,13 +159,109 @@ func sendEmail(to string, otp string) error {
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 
-	message := []byte(fmt.Sprintf("Subject: Verifyemail OTP\n\nYour OTP is: %s", otp))
+	html := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Email Verification</title>
+</head>
+
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;">
+
+<table width="100%%" cellpadding="0" cellspacing="0" style="padding:40px;background:#f4f6f9;">
+<tr>
+<td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0"
+style="background:#ffffff;border-radius:12px;overflow:hidden;
+box-shadow:0 6px 20px rgba(0,0,0,.08);">
+
+<tr>
+<td style="background:#ff6b00;padding:25px;text-align:center;color:white;">
+<h1 style="margin:0;"> Cometosee</h1>
+</td>
+</tr>
+
+<tr>
+<td style="padding:40px;">
+
+<h2 style="margin-top:0;color:#333;">
+Verify Your Email
+</h2>
+
+<p style="font-size:16px;color:#555;line-height:28px;">
+Welcome to <strong>Cometosee</strong>!
+</p>
+
+<p style="font-size:16px;color:#555;line-height:28px;">
+Use the following One-Time Password (OTP) to verify your email address:
+</p>
+
+<div style="
+margin:35px 0;
+text-align:center;
+font-size:34px;
+font-weight:bold;
+letter-spacing:8px;
+color:#ff6b00;
+background:#fff4eb;
+padding:20px;
+border-radius:10px;
+border:2px dashed #ff6b00;
+">
+%s
+</div>
+
+<p style="font-size:15px;color:#555;line-height:26px;">
+This OTP is valid for <strong>10 minutes</strong>.
+Please do not share this code with anyone.
+</p>
+
+<p style="font-size:15px;color:#555;">
+If you did not request this verification, you can safely ignore this email.
+</p>
+
+</td>
+</tr>
+
+<tr>
+<td style="background:#f8f8f8;padding:20px;text-align:center;font-size:13px;color:#888;">
+© 2026 Cometosee. All Rights Reserved.
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+`, otp)
+
+	message := []byte(fmt.Sprintf(
+		"From: Cometosee <%s>\r\n"+
+			"To: %s\r\n"+
+			"Subject: Verify Your Email - OTP\r\n"+
+			"MIME-Version: 1.0\r\n"+
+			"Content-Type: text/html; charset=\"UTF-8\"\r\n"+
+			"\r\n%s",
+		from,
+		to,
+		html,
+	))
 
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, message)
-	return err
-
+	return smtp.SendMail(
+		smtpHost+":"+smtpPort,
+		auth,
+		from,
+		[]string{to},
+		message,
+	)
 }
 
 func (s *authService) ResetPassword(email, otp, newPassword string) error {
