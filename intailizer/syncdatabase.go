@@ -338,5 +338,43 @@ EXECUTE FUNCTION update_geom_column();
 		log.Fatalf("error in creating player document table :%v", err)
 	}
 
+	//reuirement in post
+	requirementinpost := `
+	CREATE TABLE IF NOT EXISTS post_requirements (
+    requirement_id SERIAL PRIMARY KEY,
+
+    post_id INT NOT NULL
+        REFERENCES post(post_id)
+        ON DELETE CASCADE,
+
+    min_age INT,
+    max_age INT,
+
+    gender TEXT,
+
+    skill_level TEXT,
+
+    verification_required BOOLEAN DEFAULT FALSE,
+
+    player_document_required BOOLEAN DEFAULT FALSE,
+
+    description TEXT,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+
+    CHECK (
+        min_age IS NULL
+        OR max_age IS NULL
+        OR min_age <= max_age
+    ),
+
+    UNIQUE(post_id)
+);`
+
+	_, err = DB.Exec(requirementinpost)
+	if err != nil {
+		log.Fatalf("error in creating requirement in post table :%v", err)
+	}
+
 	fmt.Print("table ready")
 }

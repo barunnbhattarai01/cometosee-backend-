@@ -80,6 +80,7 @@ func main() {
 	discoverydi := di.Setupdiscoveryfeed()
 	mapdi := di.Map()
 	verficationsDi := di.VerificationDi()
+	requirementDi := di.RequirementDi()
 
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
@@ -94,6 +95,7 @@ func main() {
 	routes.Maproutes(gor, mapdi)
 	routes.PaymentRoutes(gor, paymentdi)
 	routes.VerficationsRoutes(gor, verficationsDi)
+	routes.Requirementroutes(gor, requirementDi)
 
 	//promethheus mertics
 	//had to put it on differenr server for standard code
