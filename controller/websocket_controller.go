@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"cometosee/common"
 	"cometosee/model"
 	"cometosee/service"
 
@@ -30,15 +31,20 @@ var upgrader = websocket.Upgrader{
 }
 
 func (c *WSController) ServeWS(w http.ResponseWriter, r *http.Request) {
+	log.Print("from websokcet")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	authID := common.GetAuthid(r.Context())
+	username := common.GetUsername(r.Context())
 
 	client := &model.Client{
 		Connection: conn,
 		Egress:     make(chan model.Event, 256),
+		AuthID:     int(authID),
+		Username:   username,
 	}
 
 	c.Service.Manager.Clients[client] = true

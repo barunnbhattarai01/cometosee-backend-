@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"cometosee/common"
 	"cometosee/intailizer"
 	"cometosee/model"
 	"context"
@@ -30,12 +31,13 @@ func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string,
 	}
 
 	var id int
+	room_id := common.GenerateRoomID()
 
 	err = intailizer.DB.QueryRow(`
-		INSERT INTO post (auth_id, caption, images_url,venue,longitude,latitude,sport)
-		VALUES ($1, $2, $3,$4,$5,$6,$7)
+		INSERT INTO post (auth_id, caption, images_url,venue,longitude,latitude,sport,room_id)
+		VALUES ($1, $2, $3,$4,$5,$6,$7,$8)
 		RETURNING post_id
-	`, authID, caption, imageURL, venue, lon, lat, sport).Scan(&id)
+	`, authID, caption, imageURL, venue, lon, lat, sport, room_id).Scan(&id)
 
 	if err != nil {
 		return 0, err
@@ -738,4 +740,83 @@ func (r *PostRepository) GetCancelPostInfo(postID int) (*model.CancelPostInfo, e
 	}
 
 	return &info, nil
+}
+
+// groupchat
+func (r *PostRepository) CanAccessRoom(authID int, postID int) (bool, error) {
+	var allowed bool
+	err := intailizer.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM post WHERE post_id = $1 AND auth_id = $2
+			UNION
+			SELECT 1
+			FROM post_slots ps
+			JOIN slot_participants sp ON sp.slot_id = ps.slot_id
+			WHERE ps.post_id = $1 AND sp.auth_id = $2
+		)
+	`, postID, authID).Scan(&allowed)
+	return allowed, err
+}
+
+func (r *PostRepository) GetRoomIDForPost(postID int) (string, error) {
+	var roomID string
+	err := intailizer.DB.QueryRow(`SELECT room_id FROM post WHERE post_id = $1`, postID).Scan(&roomID)
+	return roomID, err
+}
+
+func (r *PostRepository) GetJoinedChats(authID int) ([]map[string]interface{}, error) {
+	rows, err := intailizer.DB.Query(`
+		SELECT DISTINCT p.post_id, p.room_id, p.caption, p.venue, p.sport
+		FROM post p
+		WHERE p.auth_id = $1
+		UNION
+		SELECT DISTINCT p.post_id, p.room_id, p.caption, p.venue, p.sport
+		FROM post p
+		JOIN post_slots ps ON ps.post_id = p.post_id
+		JOIN slot_participants sp ON sp.slot_id = ps.slot_id
+		WHERE sp.auth_id = $1
+	`, authID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var chats []map[string]interface{}
+	for rows.Next() {
+		var postID int
+		var roomID, caption, venue, sport string
+		if err := rows.Scan(&postID, &roomID, &caption, &venue, &sport); err != nil {
+			return nil, err
+		}
+		chats = append(chats, map[string]interface{}{
+			"post_id": postID,
+			"room_id": roomID,
+			"caption": caption,
+			"venue":   venue,
+			"sport":   sport,
+		})
+	}
+	return chats, nil
+}
+
+func (r *PostRepository) CanAccessRoomByRoomID(roomID string, authID int) (bool, error) {
+	var allowed bool
+	err := intailizer.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM post WHERE room_id = $1 AND auth_id = $2
+			UNION
+			SELECT 1
+			FROM post p
+			JOIN post_slots ps ON ps.post_id = p.post_id
+			JOIN slot_participants sp ON sp.slot_id = ps.slot_id
+			WHERE p.room_id = $1 AND sp.auth_id = $2
+		)
+	`, roomID, authID).Scan(&allowed)
+	return allowed, err
+}
+
+func (r *PostRepository) GetPostIDByRoomID(roomID string) (int, error) {
+	var postID int
+	err := intailizer.DB.QueryRow(`SELECT post_id FROM post WHERE room_id = $1`, roomID).Scan(&postID)
+	return postID, err
 }

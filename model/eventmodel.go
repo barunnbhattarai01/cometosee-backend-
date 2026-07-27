@@ -24,6 +24,8 @@ type SendMessageEvent struct {
 	Message string `json:"message"`
 	From    string `json:"from"`
 	To      string `json:"to,omitempty"`
+	Room    string `json:"room,omitempty"`
+	Type    string `json:"type"`
 }
 
 type NewMessage struct {
@@ -32,7 +34,8 @@ type NewMessage struct {
 }
 
 type ChangeRoomEvent struct {
-	Name string `json:"name"`
+	Room string `json:"room"`
+	Type string `json:"type"`
 }
 
 type RegisterEvent struct {

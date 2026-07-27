@@ -212,6 +212,7 @@ EXECUTE FUNCTION update_geom_column();
    longitude double precision not null,
    latitude double precision not null,
    sport text not null,
+    room_id TEXT UNIQUE,
    created_at TIMESTAMP DEFAULT NOW()
  );`
 

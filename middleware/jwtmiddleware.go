@@ -17,8 +17,10 @@ func JwtMiddlware(next http.HandlerFunc) http.HandlerFunc {
 		//get token from authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, `{"message":"missing authorization"}`, http.StatusUnauthorized)
-			return
+			token := r.URL.Query().Get("token")
+			if token != "" {
+				authHeader = "Bearer " + token
+			}
 		}
 
 		//checkk bearear token

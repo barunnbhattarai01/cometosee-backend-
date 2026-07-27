@@ -13,9 +13,10 @@ func SetupMessage() *controller.WSController {
 	//create repo
 	messagerepo := repository.NewMessageRepo()
 
+	postrepo := repository.NewPostRepository()
 	//create servicce
 
-	wssrv := service.NewWebscoketService(manager, messagerepo)
+	wssrv := service.NewWebscoketService(manager, messagerepo, postrepo)
 
 	//create contrroler
 	wsctrl := controller.NewWSController(wssrv)
