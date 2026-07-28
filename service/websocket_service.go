@@ -7,14 +7,16 @@ import (
 )
 
 type WebsocketService struct {
-	Manager *model.Manager
-	Repo    repository.MessageRepository
+	Manager  *model.Manager
+	Repo     repository.MessageRepository
+	PostRepo *repository.PostRepository
 }
 
-func NewWebscoketService(m *model.Manager, r repository.MessageRepository) *WebsocketService {
+func NewWebscoketService(m *model.Manager, r repository.MessageRepository, postRepo *repository.PostRepository) *WebsocketService {
 	s := &WebsocketService{
-		Manager: m,
-		Repo:    r,
+		Manager:  m,
+		Repo:     r,
+		PostRepo: postRepo,
 	}
 	s.registerHandler()
 	return s

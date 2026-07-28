@@ -246,3 +246,17 @@ Thank you for using <strong>Cometosee</strong>.
 
 	return nil
 }
+
+// group chat
+func (s *PostService) GetJoinedChats(authId int) ([]map[string]interface{}, error) {
+	chats, err := s.repo.GetJoinedChats(authId)
+	if err != nil {
+		return nil, err
+	}
+
+	if chats == nil {
+		chats = []map[string]interface{}{}
+	}
+
+	return chats, nil
+}

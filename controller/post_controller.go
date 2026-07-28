@@ -299,3 +299,30 @@ func (c *PostController) CancelPost(w http.ResponseWriter, r *http.Request) {
 
 	common.WriteJSONMessage(w, "Event cancelled successfully")
 }
+
+// group chat
+func (c *PostController) GetJoinedChats(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		common.WriteJSONError(w, "invalid method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	authId := common.GetAuthid(r.Context())
+	if authId == 0 {
+		common.WriteJSONError(w, "auth_id needed", http.StatusUnauthorized)
+		return
+	}
+
+	chats, err := c.service.GetJoinedChats(int(authId))
+	if err != nil {
+		common.WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "successfully fetched joined chats",
+		"chats":   chats,
+	})
+}
