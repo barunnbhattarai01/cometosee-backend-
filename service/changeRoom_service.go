@@ -4,7 +4,6 @@ import (
 	"cometosee/model"
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
 func (s *WebsocketService) ChangeRoom(event model.Event, c *model.Client) error {
@@ -45,7 +44,7 @@ func (s *WebsocketService) ChangeRoom(event model.Event, c *model.Client) error 
 			s.Manager.Rooms[newRoom] = make(model.ClientList)
 		}
 		s.Manager.Rooms[newRoom][c] = true
-		log.Printf("ChangeRoom: client=%p user=%s room=%q members=%d\n", c, c.Username, newRoom, len(s.Manager.Rooms[newRoom]))
+		//log.Printf("ChangeRoom: client=%p user=%s room=%q members=%d\n", c, c.Username, newRoom, len(s.Manager.Rooms[newRoom]))
 	}
 
 	return nil

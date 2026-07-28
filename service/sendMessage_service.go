@@ -39,7 +39,7 @@ func (s *WebsocketService) SendMessage(event model.Event, c *model.Client) error
 	defer s.Manager.RUnlock()
 
 	if msg.Type == "group" {
-		log.Printf("SendMessage: client=%p user=%s room=%q members=%d\n", c, msg.From, room, len(s.Manager.Rooms[room]))
+		//log.Printf("SendMessage: client=%p user=%s room=%q members=%d\n", c, msg.From, room, len(s.Manager.Rooms[room]))
 		// broadcast to everyone currently in this room
 		for member := range s.Manager.Rooms[room] {
 			select {
@@ -52,6 +52,7 @@ func (s *WebsocketService) SendMessage(event model.Event, c *model.Client) error
 	}
 
 	if msg.Type == "private" {
+
 		if msg.To != "" {
 			if target, ok := s.Manager.Users[msg.To]; ok {
 				select {
