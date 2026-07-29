@@ -285,15 +285,20 @@ EXECUTE FUNCTION update_geom_column();
     id SERIAL PRIMARY KEY,
     slot_id INT NOT NULL REFERENCES post_slots(slot_id) ON DELETE CASCADE,
     auth_id INT NOT NULL REFERENCES cometoseeauth(auth_id) ON DELETE CASCADE,
+	qr_token TEXT UNIQUE,
+	qr_expires_at TIMESTAMPTZ,
+	checked_in BOOLEAN DEFAULT FALSE,
+	 checked_in_at TIMESTAMPTZ,
+	 checked_in_by INT REFERENCES cometoseeauth(auth_id),
 
-    joined_at TIMESTAMP DEFAULT NOW(),
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
 
     UNIQUE(slot_id, auth_id)
 );`
 
 	_, err = DB.Exec(slotparticipant)
 	if err != nil {
-		log.Fatal("error in creating slot participant table")
+		log.Fatal("error in creating slot participant table", err)
 	}
 
 	//verification table
