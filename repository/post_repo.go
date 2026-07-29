@@ -393,10 +393,25 @@ func (r *PostRepository) JoinSlotTx(slotID, authID int) error {
 	}
 
 	// insert
+	qrToken := common.GenerateRoomID()
+
+	expiresAt := time.Now().Add(24 * time.Hour)
+
 	_, err = tx.Exec(`
-		INSERT INTO slot_participants (slot_id, auth_id)
-		VALUES ($1, $2)
-	`, slotID, authID)
+    INSERT INTO slot_participants 
+    (
+        slot_id,
+        auth_id,
+        qr_token,
+        qr_expires_at
+    )
+    VALUES ($1,$2,$3,$4)
+`,
+		slotID,
+		authID,
+		qrToken,
+		expiresAt,
+	)
 
 	if err != nil {
 		return err

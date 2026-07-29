@@ -81,6 +81,7 @@ func main() {
 	mapdi := di.Map()
 	verficationsDi := di.VerificationDi()
 	requirementDi := di.RequirementDi()
+	qrdi := di.QrDI()
 
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
@@ -96,6 +97,7 @@ func main() {
 	routes.PaymentRoutes(gor, paymentdi)
 	routes.VerficationsRoutes(gor, verficationsDi)
 	routes.Requirementroutes(gor, requirementDi)
+	routes.QRROUTES(gor, qrdi)
 
 	//promethheus mertics
 	//had to put it on differenr server for standard code
