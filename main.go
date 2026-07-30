@@ -69,6 +69,7 @@ func main() {
 
 	//di
 	authcontroller := di.SetupAuthcontroller()
+	admincontroller := di.SetupAdminController()
 	postcontroller := di.SetupPostController()
 	wscontroller := di.SetupMessage()
 	userfilterctrl := di.UserfilterDI()
@@ -85,6 +86,7 @@ func main() {
 
 	//routing
 	routes.AuthRoutes(gor, authcontroller)
+	routes.AdminRoutes(gor, admincontroller)
 	routes.PostRoutes(gor, postcontroller)
 	routes.WebscoketRoutes(gor, wscontroller)
 	routes.SetupUserfilterroutes(gor, userfilterctrl)
