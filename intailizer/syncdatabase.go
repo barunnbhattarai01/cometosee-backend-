@@ -382,5 +382,22 @@ EXECUTE FUNCTION update_geom_column();
 		log.Fatalf("error in creating requirement in post table :%v", err)
 	}
 
+	//admin auth
+	adminauth := `CREATE TABLE if not exists admin_auth (
+    admin_id SERIAL PRIMARY KEY,
+
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);`
+
+	_, err = DB.Exec(adminauth)
+	if err != nil {
+		log.Fatalf("error in creating admin table")
+	}
+
 	fmt.Print("table ready")
 }
