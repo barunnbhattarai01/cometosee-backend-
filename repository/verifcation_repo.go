@@ -264,20 +264,22 @@ func (r *verificationRepository) GetPendingVerifications() ([]model.Verification
 
 	query := `
 SELECT
-
-verification_id,
-auth_id,
-citizenship_front,
-citizenship_back,
-verification_status,
-rejection_reason,
-verified_at,
-created_at,
-updated_at
-
-FROM user_verification
-WHERE verification_status='pending'
-ORDER BY created_at ASC
+    uv.verification_id,
+    uv.auth_id,
+    ca.email,
+    ca.username,
+    uv.citizenship_front,
+    uv.citizenship_back,
+    uv.verification_status,
+    uv.rejection_reason,
+    uv.verified_at,
+    uv.created_at,
+    uv.updated_at
+FROM user_verification uv
+JOIN cometoseeauth ca
+    ON uv.auth_id = ca.auth_id
+WHERE uv.verification_status = 'pending'
+ORDER BY uv.created_at ASC
 `
 
 	rows, err := intailizer.DB.Query(query)
@@ -298,6 +300,8 @@ ORDER BY created_at ASC
 
 			&v.VerificationID,
 			&v.AuthID,
+			&v.Email,
+			&v.Username,
 			&v.CitizenshipFront,
 			&v.CitizenshipBack,
 			&v.Status,
@@ -444,21 +448,24 @@ func (r *verificationRepository) GetPendingPlayerDocuments() ([]model.PlayerDocu
 
 	query := `
 SELECT
-	document_id,
-	auth_id,
-	document_name,
-	document_type,
-	document_url,
-	issued_by,
-	issue_date,
-	verification_status,
-	rejection_reason,
-	verified_at,
-	created_at
-
-FROM player_documents
-WHERE verification_status='pending'
-ORDER BY created_at ASC
+    pd.document_id,
+    pd.auth_id,
+    ca.email,
+    ca.username,
+    pd.document_name,
+    pd.document_type,
+    pd.document_url,
+    pd.issued_by,
+    pd.issue_date,
+    pd.verification_status,
+    pd.rejection_reason,
+    pd.verified_at,
+    pd.created_at
+FROM player_documents pd
+JOIN cometoseeauth ca
+    ON pd.auth_id = ca.auth_id
+WHERE pd.verification_status = 'pending'
+ORDER BY pd.created_at ASC
 `
 
 	rows, err := intailizer.DB.Query(query)
@@ -476,6 +483,8 @@ ORDER BY created_at ASC
 		err := rows.Scan(
 			&d.DocumentID,
 			&d.AuthID,
+			&d.Email,
+			&d.Username,
 			&d.DocumentName,
 			&d.DocumentType,
 			&d.DocumentURL,
