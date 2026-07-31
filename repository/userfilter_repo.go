@@ -16,7 +16,15 @@ func NewUserFilterRepository() UserFilterRepository {
 }
 
 func (r *userFilterRepo) FilterUsersByName() ([]model.Auth, error) {
-	query := `SELECT auth_id,username FROM cometoseeauth`
+	query := `
+SELECT
+    a.auth_id,
+    a.username,
+    COALESCE(u.avatar, '') AS avatar
+FROM cometoseeauth a
+LEFT JOIN userdetailinfo u
+    ON a.auth_id = u.auth_id
+`
 	rows, err := intailizer.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -25,7 +33,7 @@ func (r *userFilterRepo) FilterUsersByName() ([]model.Auth, error) {
 	var users []model.Auth
 	for rows.Next() {
 		var u model.Auth
-		if err := rows.Scan(&u.Auth_id, &u.Username); err != nil {
+		if err := rows.Scan(&u.Auth_id, &u.Username, &u.Avatar); err != nil {
 			return nil, err
 		}
 		users = append(users, u)

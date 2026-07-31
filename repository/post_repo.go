@@ -115,6 +115,7 @@ func (r *PostRepository) FetchFeed(
         p.caption,
         COALESCE(p.images_url, '') AS images_url,
         a.username,
+        COALESCE(u.avatar, '') AS avatar,
         p.venue,
         p.longitude,
         p.latitude,
@@ -129,13 +130,21 @@ func (r *PostRepository) FetchFeed(
             WHERE sp2.slot_id = ps.slot_id
         ) AS current_participants
     FROM post p
-    JOIN cometoseeauth a ON p.auth_id = a.auth_id
+    JOIN cometoseeauth a
+        ON p.auth_id = a.auth_id
+    LEFT JOIN userdetailinfo u
+        ON u.auth_id = p.auth_id
     LEFT JOIN (
         SELECT DISTINCT ON (slot_id)
-            slot_id, post_id, start_time, end_time, max_participants
+            slot_id,
+            post_id,
+            start_time,
+            end_time,
+            max_participants
         FROM post_slots
         ORDER BY slot_id
-    ) ps ON ps.post_id = p.post_id
+    ) ps
+        ON ps.post_id = p.post_id
     WHERE
         p.sport = $1
         AND p.latitude IS NOT NULL
@@ -159,7 +168,7 @@ func (r *PostRepository) FetchFeed(
 	for rows.Next() {
 
 		var id int
-		var caption, imageURL, username, venue, userSport string
+		var caption, imageURL, username, venue, userSport, avatar string
 		var longitude, latitude float64
 
 		var slotID *int
@@ -172,6 +181,7 @@ func (r *PostRepository) FetchFeed(
 			&caption,
 			&imageURL,
 			&username,
+			&avatar,
 			&venue,
 			&longitude,
 			&latitude,
@@ -194,6 +204,7 @@ func (r *PostRepository) FetchFeed(
 				"caption":   caption,
 				"image":     imageURL,
 				"username":  username,
+				"avatar":    avatar,
 				"venue":     venue,
 				"sport":     userSport,
 				"longitude": longitude,
