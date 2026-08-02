@@ -17,10 +17,27 @@ func NewPostRepository() *PostRepository {
 }
 
 func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string, lon float64, lat float64) (int, error) {
+	//only verified user can create psot
+	var isVerified bool
+
+	err := intailizer.DB.QueryRow(`
+		SELECT is_verified
+		FROM cometoseeauth
+		WHERE auth_id = $1
+	`, authID).Scan(&isVerified)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if !isVerified {
+		return 0, errors.New("only verified users can create posts")
+	}
+
 	//get user location
 
 	var sport string
-	err := intailizer.DB.QueryRow(`
+	err = intailizer.DB.QueryRow(`
 		SELECT u.sport
 		FROM location l
 		JOIN userdetailinfo u ON u.user_detail_id = l.user_detail_id

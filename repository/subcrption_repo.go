@@ -25,6 +25,10 @@ func (r *subscriptionRepo) CreateSubscription(authID int, plan string, duration 
 	query := `
 		INSERT INTO subscriptiontable (auth_id, plan, status, start_date, end_date)
 		VALUES ($1, $2, 'active', now(), now() + $3::interval)
+		ON CONFLICT (auth_id) DO UPDATE
+		SET status = 'active',
+		    plan = EXCLUDED.plan,
+		    end_date = GREATEST(subscriptiontable.end_date, now()) + $3::interval
 	`
 	_, err := intailizer.DB.Exec(query, authID, plan, duration.String())
 	return err

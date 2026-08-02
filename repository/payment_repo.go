@@ -20,16 +20,16 @@ func NewPaymentRepository() PaymentRepository {
 
 func (r *paymentRepo) CreatePending(authID int, plan string, transactionUUID string, amount float64) error {
 	query := `INSERT INTO paymenttable (auth_id,plan, transaction_uuid, amount, status) VALUES ($1, $2, $3,$4, 'pending')`
-	_, err := intailizer.DB.Exec(query, authID, transactionUUID, plan, amount)
+	_, err := intailizer.DB.Exec(query, authID, plan, transactionUUID, amount)
 	return err
 }
 
 func (r *paymentRepo) GetByTransactionUUID(transactionUUID string) (*model.Payment, error) {
-	query := `SELECT id, auth_id, transaction_uuid, amount, status, payment_date FROM paymenttable WHERE transaction_uuid = $1`
+	query := `SELECT id, auth_id, plan, transaction_uuid, amount, status, payment_date FROM paymenttable WHERE transaction_uuid = $1`
 	row := intailizer.DB.QueryRow(query, transactionUUID)
 
 	var p model.Payment
-	err := row.Scan(&p.ID, &p.AuthID, &p.TransactionUUID, &p.Amount, &p.Status, &p.PaymentDate)
+	err := row.Scan(&p.ID, &p.AuthID, &p.Plan, &p.TransactionUUID, &p.Amount, &p.Status, &p.PaymentDate)
 	if err != nil {
 		return nil, err
 	}
