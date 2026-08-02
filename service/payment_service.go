@@ -28,7 +28,7 @@ func (s *paymentService) InitiatePayment(authID int, transactionUUID string, amo
 	if transactionUUID == "" {
 		return errors.New("transactionUUID is required")
 	}
-	return s.repo.CreatePending(authID, transactionUUID, plan, amount)
+	return s.repo.CreatePending(authID, plan, transactionUUID, amount)
 }
 
 func (s *paymentService) GetPayment(transactionUUID string) (*model.Payment, error) {
