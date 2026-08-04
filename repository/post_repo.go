@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -49,6 +50,23 @@ func (r *PostRepository) CreatePOST(authID int, caption, imageURL, venue string,
 
 	var id int
 	room_id := common.GenerateRoomID()
+
+	//validate field
+	if strings.TrimSpace(caption) == "" {
+		return 0, errors.New("caption is required")
+	}
+
+	if strings.TrimSpace(imageURL) == "" {
+		return 0, errors.New("image is required")
+	}
+
+	if strings.TrimSpace(venue) == "" {
+		return 0, errors.New("venue is required")
+	}
+
+	if lon == 0 || lat == 0 {
+		return 0, errors.New("location is required")
+	}
 
 	err = intailizer.DB.QueryRow(`
 		INSERT INTO post (auth_id, caption, images_url,venue,longitude,latitude,sport,room_id)
