@@ -760,7 +760,7 @@ AND auth_id=$2
 	`, postID, authID)
 
 	if err != nil {
-		return err
+		return errors.New("failed to cancel post ")
 	}
 
 	affected, _ := result.RowsAffected()

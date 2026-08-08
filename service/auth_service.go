@@ -35,6 +35,12 @@ func NewAuthService(repo repository.AuthRepositry) AuthService {
 }
 
 func (s *authService) Signup(user model.Auth) error {
+
+	//validation
+	if user.Email == "" || user.Password == "" || user.Username == "" {
+		return errors.New("email, password and username are required")
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {
 		return err
@@ -63,6 +69,12 @@ func (s *authService) Signup(user model.Auth) error {
 }
 
 func (s *authService) Login(email, password string) (string, string, error) {
+
+	//validation
+	if email == "" || password == "" {
+		return "", "", errors.New("email and password are required")
+	}
+
 	email = strings.ToLower(email)
 
 	user, err := s.repo.GetUserByEmail(email)
