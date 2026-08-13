@@ -1,4 +1,4 @@
-name: Build Go Backend
+name: Build and Deploy Go Backend
 
 on:
   push:
@@ -6,21 +6,57 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. source codede checkout
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # 2. insatll go
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.7"
+          go-version: "1.24"
 
+      # 3. download dependencies
       - name: Download dependencies
         run: go mod download
 
+      # 4. build llinux binary
       - name: Build Linux binary
         run: |
           GOOS=linux GOARCH=amd64 go build -o backend .
+
+      # 5. configure SSH
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.AZURE_SSH_KEY }}" > ~/.ssh/azure_key
+          chmod 600 ~/.ssh/azure_key
+          ssh-keyscan -H "${{ secrets.AZURE_HOST }}" >> ~/.ssh/known_hosts
+
+      # 6. test SSH connection
+      - name: Test Azure SSH
+        run: |
+          ssh -i ~/.ssh/azure_key \
+            "${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }}" \
+            "hostname && whoami"
+
+      # 7. upload new binary
+      - name: Upload binary
+        run: |
+          scp -i ~/.ssh/azure_key \
+            backend \
+            "${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }}:/home/azureuser/backend-new"
+
+      # 8. replace old binary and restart
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/azure_key \
+            "${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }}" \
+            'sudo systemctl stop cometosee &&
+             sudo mv /home/azureuser/backend-new /home/azureuser/backend &&
+             sudo chmod +x /home/azureuser/backend &&
+             sudo systemctl start cometosee'
