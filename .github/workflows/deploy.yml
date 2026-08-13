@@ -10,53 +10,82 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. source codede checkout
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # 2. insatll go
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.24"
 
-      # 3. download dependencies
       - name: Download dependencies
-        run: go mod download
+        run: |
+          go mod download
 
-      # 4. build llinux binary
       - name: Build Linux binary
         run: |
           GOOS=linux GOARCH=amd64 go build -o backend .
 
-      # 5. configure SSH
-      - name: Configure SSH
+      - name: Check binary
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.AZURE_SSH_KEY }}" > ~/.ssh/azure_key
-          chmod 600 ~/.ssh/azure_key
-          ssh-keyscan -H "${{ secrets.AZURE_HOST }}" >> ~/.ssh/known_hosts
+          file backend
+          ls -lh backend
 
-      # 6. test SSH connection
-      - name: Test Azure SSH
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.AZURE_SSH_KEY }}
+          AZURE_HOST: ${{ secrets.AZURE_HOST }}
         run: |
-          ssh -i ~/.ssh/azure_key \
-            "${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }}" \
+          set -e
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/azure_key"
+          chmod 600 "$HOME/.ssh/azure_key"
+
+          ssh-keyscan -H "$AZURE_HOST" >> "$HOME/.ssh/known_hosts"
+          chmod 644 "$HOME/.ssh/known_hosts"
+
+      - name: Test Azure SSH
+        env:
+          AZURE_HOST: ${{ secrets.AZURE_HOST }}
+          AZURE_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          ssh \
+            -i "$HOME/.ssh/azure_key" \
+            "$AZURE_USER@$AZURE_HOST" \
             "hostname && whoami"
 
-      # 7. upload new binary
-      - name: Upload binary
+      - name: Upload binary to Azure
+        env:
+          AZURE_HOST: ${{ secrets.AZURE_HOST }}
+          AZURE_USER: ${{ secrets.AZURE_USER }}
         run: |
-          scp -i ~/.ssh/azure_key \
+          scp \
+            -i "$HOME/.ssh/azure_key" \
             backend \
-            "${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }}:/home/azureuser/backend-new"
+            "$AZURE_USER@$AZURE_HOST:/home/azureuser/backend-new"
 
-      # 8. replace old binary and restart
-      - name: Deploy
+      - name: Deploy application
+        env:
+          AZURE_HOST: ${{ secrets.AZURE_HOST }}
+          AZURE_USER: ${{ secrets.AZURE_USER }}
         run: |
-          ssh -i ~/.ssh/azure_key \
-            "${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }}" \
+          ssh \
+            -i "$HOME/.ssh/azure_key" \
+            "$AZURE_USER@$AZURE_HOST" \
             'sudo systemctl stop cometosee &&
              sudo mv /home/azureuser/backend-new /home/azureuser/backend &&
              sudo chmod +x /home/azureuser/backend &&
              sudo systemctl start cometosee'
+
+      - name: Check application status
+        env:
+          AZURE_HOST: ${{ secrets.AZURE_HOST }}
+          AZURE_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          ssh \
+            -i "$HOME/.ssh/azure_key" \
+            "$AZURE_USER@$AZURE_HOST" \
+            "sudo systemctl is-active cometosee"
