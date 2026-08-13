@@ -31,7 +31,7 @@ func (c *UserFilterController) FilterUsersByName(w http.ResponseWriter, r *http.
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "Users fetched successfully",
+		"message": "sucess",
 		"users":   users,
 	})
 }
