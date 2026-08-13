@@ -121,6 +121,11 @@ func (c *PostController) CommentPost(w http.ResponseWriter, r *http.Request) {
 
 func (c *PostController) FetchFeed(w http.ResponseWriter, r *http.Request) {
 
+	if r.Method != http.MethodPost {
+		common.WriteJSONError(w, "invalid method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	type Req struct {
 		Lat    float64 `json:"lat"`
 		Lon    float64 `json:"lon"`

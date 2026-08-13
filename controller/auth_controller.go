@@ -61,6 +61,13 @@ func (c *AuthController) Signup(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	if r.Method != http.MethodPost {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "invalid method",
+		})
+		return
+	}
+
 	var body model.Auth
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		common.WriteJSONError(w, "invalid request body", http.StatusBadRequest)
@@ -72,7 +79,7 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		common.WriteJSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":  "login sucessfully",
 		"token":    token,
 		"username": username,
